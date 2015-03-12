@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="angularapp">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Mat, drikke og kos</title>
+
+    <link rel="stylesheet" type="text/css" href="css/tangerine-font.css">
+
+    <link rel="stylesheet" href="css/main.css" type="text/css">
+    <link rel="stylesheet" href="css/mobile.css" type="text/css">
+    <link rel="icon" href="images/favicon.ico" sizes="64x64" type="image/vnd.microsoft.icon" />
+    <script src="/vendor/angular/angular.min.js"></script>
+    <script src="/vendor/angular-resource/angular-resource.min.js"></script>
+    <script src="/vendor/angular-route/angular-route.min.js"></script>
+    <script src="/vendor/angular-sanitize/angular-sanitize.min.js"></script>
+    <script src="/vendor/firebase/firebase.js"></script>
+
+    <script src="/vendor/angularfire/dist/angularfire.min.js"></script>
+    <script src="/vendor/html5-boilerplate/js/vendor/jquery-1.10.2.min.js"></script>
+
+    <script src="js/convert_to_spotify.js"></script>
+</head>
+
+<body>
+    <article ng-view>
+        <label for="wimpList">Wimp spilleliste</label>
+        <textarea id="wimpList" rows="6" ng-model="wimpList"></textarea>
+
+        <button ng-click="convert()">Konverter</button>
+
+        <table>
+            <tr ng-repeat="song in songs">
+                <td>
+                    <textarea rows="3" ng-model="song.searchTerms"></textarea>
+                </td>
+                <td>
+                    <select ng-options="match.label for match in song.tracks"
+                            ng-model="song.chosenTrack" />
+                </td>
+            </tr>
+        </table>
+        <button ng-click="convert()">Konverter</button>
+
+        <textarea rows="10" ng-show="songs" ng-bind-html="allSpotifyHrefs()"</textarea>
+    </article>
+
+</body>
+</html>
+
