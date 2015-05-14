@@ -1,0 +1,3 @@
+IBM 4.0
+Apple 0.0
+Gartner 40.0
