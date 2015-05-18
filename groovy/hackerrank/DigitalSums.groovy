@@ -1,25 +1,19 @@
+import org.jscience.mathematics.number.Real
+
+import javax.security.sasl.RealmCallback
+import java.math.RoundingMode
+
+import static Globals.TWO
 import static java.lang.Math.floor
 import static java.lang.Math.log10
 import static java.lang.Math.sqrt
 import static java.math.BigDecimal.ONE
 import static java.math.BigDecimal.TEN
 import static java.math.MathContext.DECIMAL64
+import static java.math.RoundingMode.HALF_UP
 
-def digitalSumOld(BigDecimal root) {
-    (1..P).collect {
-        def log10Root = (int) floor(log10(root.doubleValue()))
-        if (log10Root >= 0) {
-            def tenToLog = TEN.pow(log10Root)
-            def digit = root.divide(tenToLog).doubleValue() as Integer
-            root = root.subtract(tenToLog.multiply(digit))
-            return digit as Integer
-        }
-        root = root.multiply(TEN)
-        def digit = floor(root.doubleValue())
-        root = root.subtract(ONE.multiply(digit))
-        return digit as Integer
-    }
-    .sum()
+class Globals {
+    public static final BigDecimal TWO = ONE.multiply(2.0)
 }
 
 def digitalSum(BigDecimal root) {
@@ -41,50 +35,53 @@ def squareRoot(number) {
     def numberBD = new BigDecimal(number, DECIMAL64)
     def rootBD   = new BigDecimal(estimate, DECIMAL64)
 
-    def state = [min: null, max: null, number: numberBD, maxPrecision: P*2, last: null]
+    def state = [number: numberBD, maxDeviation: BigDecimal.valueOf(1, P), last: null]
 
     return convergeOnSqrt(rootBD, state)
 }
 
-def convergeOnSqrt(currTry, state) {
-    def rootSquared = currTry * currTry
+def convergeOnSqrt(BigDecimal currTry, state) {
+    BigDecimal almostZero = currTry.pow(2).subtract(state.number)
     debug currTry
-    if (state.min != null && state.max != null &&
-            state.min.toString()[0..Math.min(P, state.min.toString().length()-1)] ==
-            state.max.toString()[0..Math.min(P, state.max.toString().length()-1)]) {
+    debug almostZero
+    if (almostZero.abs().compareTo(state.maxDeviation) < 0) {
         return currTry
     }
 
-    if (rootSquared < state.number) {
-        state.min = currTry
-        if (state.max == null) {
-            return convergeOnSqrt(currTry.plus(ONE.divide(TEN.pow(currTry.scale))), state)
-        }
-        return convergeOnSqrt(currTry.plus(state.max).divide(ONE.multiply(2.0)), state)
-    } else {
-        state.max = currTry
-        if (state.min == null) {
-            return convergeOnSqrt(currTry.subtract(ONE.divide(TEN.pow(currTry.scale))), state)
-        }
-        return convergeOnSqrt(currTry.plus(state.min).divide(ONE.multiply(2.0)), state)
-    }
+    BigDecimal derivative = currTry.multiply(TWO)
+    debug derivative
+    BigDecimal nextTry = currTry.subtract( almostZero.divide(derivative, HALF_UP) )
+
+    state.last = currTry
+    convergeOnSqrt(nextTry, state)
 }
 
 DEBUG = false
+
 def debug(msg) {
     if (DEBUG) println "D: ${msg ?: msg.toString()}"
 }
 
-BufferedReader br = new BufferedReader(new InputStreamReader(System.in))
-N = br.readLine().toInteger() // How many natural numbers to process
-P = br.readLine().toInteger() // How many digits to sum for each irrational square root
-
-(1..N).each { double natural ->
-    BigDecimal root = squareRoot(natural)
-    if (root.doubleValue() == floor(root.doubleValue())) {
-        return
+private void solve(options) {
+    DEBUG = options.debug
+    if (options.mockInput) {
+        N = 2
+        P = 100
+    } else {
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in))
+        N = br.readLine().toInteger() // How many natural numbers to process
+        P = br.readLine().toInteger() // How many digits to sum for each irrational square root
     }
-    println digitalSum(root)
+
+    (1..N).each { double natural ->
+        BigDecimal root = squareRoot(natural)
+        if (root.doubleValue() == floor(root.doubleValue())) {
+            return
+        }
+        println digitalSum(root)
+    }
 }
 
-println digitalSum(new BigDecimal("1.434"))
+solve( [ mockInput: true, debug: false ] )
+
+println Real.valueOf(2.0).sqrt()
