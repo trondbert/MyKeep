@@ -2,118 +2,81 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import static java.lang.Math.floor;
 import static java.lang.Math.sqrt;
 import static java.lang.String.format;
 import static java.math.BigDecimal.ONE;
 import static java.math.MathContext.DECIMAL64;
-import static java.math.RoundingMode.HALF_UP;
-
-class Options {
-    boolean mockInput;
-    boolean debug;
-
-    Options() {}
-
-    Options(boolean mockInput, boolean debug) {
-        this.mockInput = mockInput;
-        this.debug = debug;
-    }
-    public Options mockInput() { mockInput = true; return this; }
-    public Options debug()     { debug = true;     return this; }
-
-    public static Options options() { return new Options(); }
-}
+import static java.math.RoundingMode.HALF_DOWN;
 
 class DigitalSumsJava {
     public static final BigDecimal TWO = ONE.multiply(BigDecimal.valueOf(2));
-    private final boolean DEBUG;
-    private final boolean MOCKINPUT;
     private static int N = 0;
     private static int P = 0;
 
-    public DigitalSumsJava(Options options) {
-        DEBUG = options.debug;
-        MOCKINPUT = options.mockInput;
-    }
+    private static BigDecimal DIGITS;
+    private static BigDecimal PRECISION;
+    private static int TEMP_SCALE;
 
-    private long digitalSum(String numberString) {
-        int count = 0; long sum = 0;
-        char[] chars = numberString.toCharArray();
-        for (int i = 0; i <= P; i++) {
-            char character = chars[i];
-            if (character != '.') {
-                sum += Character.getNumericValue(character);
-            }
+    private static BigDecimal sqrtNewtonRaphson  (BigDecimal c, BigDecimal xn, BigDecimal precision){
+        BigDecimal fx = xn.pow(2).add(c.negate());
+        BigDecimal fpx = xn.multiply(new BigDecimal(2));
+        BigDecimal xn1 = fx.divide(fpx, 2*P, RoundingMode.HALF_DOWN);
+        xn1 = xn.add(xn1.negate());
+        BigDecimal currentSquare = xn1.pow(2);
+        BigDecimal currentPrecision = currentSquare.subtract(c);
+        currentPrecision = currentPrecision.abs();
+        if (currentPrecision.compareTo(precision) <= -1){
+            return xn1;
         }
-        return sum;
+        return sqrtNewtonRaphson(c, xn1, precision);
     }
 
-    BigDecimal squareRoot(int number) {
-        BigDecimal numberBD = new BigDecimal(number, DECIMAL64);
-        BigDecimal currTry   = BigDecimal.valueOf(sqrt(numberBD.doubleValue()));
-        BigDecimal almostZero = null;
-        BigDecimal maxDeviation = BigDecimal.valueOf(1, P);
-        while (true) {
-            almostZero = currTry.pow(2).subtract(numberBD);
-            if (almostZero.abs().compareTo(maxDeviation) < 0) {
-                break;
-            }
-            currTry = currTry.subtract(almostZero.divide(
-                                        currTry.multiply(TWO), HALF_UP));
-        }
-        return currTry;
-    }
-
-    void debug(String msg) {
-        if (DEBUG)
-            System.out.println(format("D: %s", msg != null ? msg.toString() : msg));
-    }
-
-    private void solve() {
-        if (MOCKINPUT) {
-            N = 2;
-            P = 100;
-        } else {
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
-                N = Integer.valueOf(br.readLine()); // How many natural numbers to process
-                P = Integer.valueOf(br.readLine()); // How many digits to sum for each irrational square root
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
+    public static void main(String[] args) throws IOException {
         long totalSum = 0;
+        long singleSum = 0;
+        BigDecimal numberBD;
+        BigDecimal currTry;
+        BigDecimal almostZero;
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        N = Integer.valueOf(br.readLine()); // How many natural numbers to process
+        P = Integer.valueOf(br.readLine()); // How many digits to sum for each irrational square root
+
+        DIGITS = new BigDecimal(P);
+        PRECISION = new BigDecimal(10).pow(P);
+        TEMP_SCALE = (int)(1.8*P);
+
+        BigDecimal maxDeviation = BigDecimal.valueOf(1, P);
+
         for (int natural = 1; natural <= N; natural++) {
-            BigDecimal root = squareRoot(natural);
-            double rootDouble = root.doubleValue();
-            if (rootDouble == floor(rootDouble)) {
+            numberBD = new BigDecimal(natural, DECIMAL64);
+            currTry = BigDecimal.valueOf(sqrt(numberBD.doubleValue()));
+            currTry.setScale(TEMP_SCALE);
+            while (true) {
+                almostZero = currTry.pow(2).subtract(numberBD);
+                if (almostZero.abs().compareTo(maxDeviation) < 0) {
+                    break;
+                }
+                currTry = currTry.subtract(almostZero.divide(currTry.multiply(TWO), TEMP_SCALE, HALF_DOWN));
+            }
+            if (currTry.doubleValue() == floor(currTry.doubleValue())) {
                 continue;
             }
-            totalSum += digitalSum(root.toString());
 
-            /*
-            System.out.println(digitalSum(root.toString()));
-            System.out.println(root.toString());
-
-            org.jscience.mathematics.number.Real numberReal =
-                    org.jscience.mathematics.number.Real.valueOf(natural);
-            numberReal.setExactPrecision((int) (P * 2.3));
-            org.jscience.mathematics.number.Real rootReal = numberReal.sqrt();
-
-            System.out.println(digitalSum(rootReal.toString()));
-            System.out.println(rootReal.toString());
-            */
+            singleSum = 0;
+            char[] chars = currTry.toString().toCharArray();
+            for (int i = 0; i <= P; i++) {
+                char character = chars[i];
+                if (character != '.') {
+                    singleSum += Character.getNumericValue(character);
+                }
+            }
+            totalSum += singleSum;
         }
         System.out.println(totalSum);
-    }
-
-
-    public static void main(String[] args) {
-        new DigitalSumsJava( new Options()
-//                .mockInput().debug()
-        ).solve();
     }
 }
 
