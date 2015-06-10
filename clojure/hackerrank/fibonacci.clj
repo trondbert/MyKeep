@@ -1,7 +1,13 @@
 (def modBase 100000007)
 
-(def fibMap {0 0, 1 1})
+(def fibMap     (vector 1 1 3 21))
+(def prevFibMap (vector 0 1 2 13))
+(def fibArr     (vector 0 1 1  2))
 (declare fib)
+
+(defn log2 [n]
+  (int (/ (Math/log n) (Math/log 2)))
+)
 
 (def not-empty? (complement empty?))
 
@@ -25,46 +31,51 @@
     )
 )
 
-(defn fibFast [t n] ; t is the target, n is temporary
-    (if (< t 3) (fib t)
-        (if (< (- t n) 20) ; not worth doing smart stuff 
-            (fib t)
-            (let [fn            (fib n)
-                  fm            (get fibMap (- n 1))
-                  d             (largestStoredFib (- t n))
-                  fd            (get fibMap    d)
-                  fd_add1       (get fibMap (+ d 1))
-                  fd_sub1       (get fibMap (- d 1))
-                  fn_add_d      (mod (+ (* fn fd_add1) (* fm fd)) modBase)
-                  fn_add_d_sub1 (mod (+ (* fn fd) (* fm fd_sub1)) modBase)
-                  fn_add_d_add1 (mod (+ fn_add_d fn_add_d_sub1) modBase)
-                 ]
-                 (def fibMap (assoc fibMap  (+ n d)     fn_add_d 
-                                            (+ n d -1)  fn_add_d_sub1
-                                            (+ n d 1)   fn_add_d_add1))
-                 ;fib (n + d) = fn*fib (d + 1) + fm * fib d
-                 ;fib (n + d-1) = fn*fib (d) + fm * fib (d-1)
-                 
-                 (fib t (+ n d))
+(defn bestDiffLog [distance]
+    (min (int (log2 distance)) (- (count fibMap) 1))
+)
+
+(defn fibFast [n t ft fs] ; n is the final target, t is temporary
+    (if (= n t)
+        ft
+        (let [d             (int (Math/pow 2 (bestDiffLog (- n t))))
+              tLog (log2 t)
+              dLog (log2 d)
+              fd            (fibMap dLog)
+              fd_sub1       (prevFibMap dLog)
+              ft_add_d      (mod (+ (* (+ ft fs) fd) (* ft fd_sub1)) modBase)
+              ft_add_d_sub1 (mod (+ (* ft fd) (* fs fd_sub1)) modBase)
+             ]
+            (println [n t ft fs])            (println ["d: " d (- n t)])
+            (if (= d t)
+                (let [] (def fibMap (conj fibMap ft_add_d))
+                        (def prevFibMap (conj prevFibMap ft_add_d_sub1)))
             )
+            (println ["Map " fibMap])
+            (println ["Map " prevFibMap])
+            (println ["kaller " n (+ t d) ft_add_d ft_add_d_sub1])
+            (fibFast n (+ t d) ft_add_d ft_add_d_sub1)
         )
     )
 )
 
 (defn fib [n]
-    (if (> n 20) 
-        (fibFast n (largestStoredFib n))
-        (if (contains? fibMap n)
-            (get fibMap n)
-            (let [result (mod (+ (fib (- n 1)) (fib (- n 2))) modBase)]
-                (def fibMap (assoc fibMap n result))
-                result
-            )
+    (if (< n 2)
+        (fibArr n)
+        (let [tLog (bestDiffLog n) 
+              t  (int (Math/pow 2 (bestDiffLog n)))
+              ft (fibMap tLog)
+              fs (prevFibMap tLog)
+             ]
+            (fibFast n t ft fs)
         )
     )
 )
 
-;(doseq [line (rest (line-seq (java.io.BufferedReader. *in*)))]
-;    (println (fib (read-string line))))
+(doseq [line (rest (line-seq (java.io.BufferedReader. *in*)))]
+   (println (fib (read-string line))))
 
-(println (fib 10 0))
+;(println (bestDiff 10))
+;(println (fib 7))
+;(println fibMap)
+;(println (int (Math/pow 2 (bestDiffLog 3))))
