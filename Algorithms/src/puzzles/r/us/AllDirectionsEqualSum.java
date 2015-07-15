@@ -1,9 +1,8 @@
 package puzzles.r.us;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import javafx.util.Pair;
+
+import java.util.*;
 
 public class AllDirectionsEqualSum {
 
@@ -11,8 +10,45 @@ public class AllDirectionsEqualSum {
     static final int[][] boardArray = new int[width][width];
     AllDirectionsEqualBoard board = new AllDirectionsEqualBoard();
 
+    private static final int hvorStortDatasett = 45;
+    static Long[][] factorials = new Long[hvorStortDatasett][hvorStortDatasett];
+
+    static Map<Integer, List<Integer>> factorialSegments = new HashMap();
+
     public static void main(String[] args) {
-        new AllDirectionsEqualSum().solve();
+        //new AllDirectionsEqualSum().solve();
+
+        factorials[1][0] = 1L;
+        factorials[1][1] = 1L;
+
+        for (int i = 1; i < hvorStortDatasett; i++) {
+            factorials[i][i] = (long)i;
+        }
+
+        for (int all = 2; all < hvorStortDatasett; all++) {
+            StringBuilder sb = new StringBuilder();
+            for (int selection = 1; selection <= (all+1)/2; selection++) {
+                long binomial;
+                binomial = Math.max(0, fac(all, (all - selection + 1)) / fac(selection, 1));
+                sb.append(binomial);
+                sb.append(" ");
+            }
+            for (int rest = (all+1)/2 + 1; rest <= 100; rest++) {
+                sb.append("0 ");
+            }
+            System.out.println(sb.toString());
+        }
+    }
+
+    private static Long fac(int max, int min) {
+        if (factorials[max][min] != null) {
+            return factorials[max][min];
+        }
+        for (int i = min+1; i <= max; i++) {
+            factorials[i][min] = i * factorials[i-1][min];
+        }
+        System.out.println(String.format("Fac [%d][%d]: %d", max, min, factorials[max][min]));
+        return factorials[max][min];
     }
 
     private void solve() {

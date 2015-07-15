@@ -24,33 +24,27 @@ print_bytes: ; rdi holder bytes som skal skrives, rsi holder antall bytes
 
 print_char: ; rdi holder characteren som skal skrives
 	push 	rdi
-	push 	rsi
-	push 	rdx
 	mov 	rsi, rsp ; Setter rsi til stack-pointer-adresse. Peker altså til opprinnelig rsi-verdi som sist ble pusha på stack
 	mov     rax, 0x2000004 ; write
     mov     rdi, 1 ; stdout
     mov     rdx, 1 ; antall bytes
     syscall
-    pop 	rdx
-    pop 	rsi
     pop 	rdi
     ret
 
 print_str_zeroterm: ; rdi peker på strengen
 	push 	rdi
-	mov 	rdx, rdi ; rdx skal økes og peke på aktiv char inn i strengen
+	mov 	r10, rdi ; r10 skal økes og peke på aktiv char inn i strengen
 	new_round:
 		mov 	rax, 0   ; vi leser byte for byte inn i nedre del av rax, så vi nullstiller hele rax
-		mov 	rsi, rdx ; lodsb leser fra plasseringen [rsi]
+		mov 	rsi, r10 ; lodsb leser fra plasseringen [rsi]
 		lodsb	
 		cmp		rax, 0
 		jz 		exit_zeroterm
 
 		mov 	rdi, rax
-		push 	rdx
 		call 	print_char
-		pop 	rdx
-		add 	rdx, 1
+		add 	r10, 1
 		jmp		new_round
 
 	exit_zeroterm:
@@ -58,46 +52,29 @@ print_str_zeroterm: ; rdi peker på strengen
 	ret
 
 print_strlen: ; rdi peker på strengen
-	mov 	rdx, rdi
-	call 	print_ln
-	;mov 	rcx, 0    ; counter
-	;mov 	rsi, rdx
-;	push 	rdx
-;	lodsq
-;	pop 	rdx
-;	mov 	rdi, rax
-;	mov 	r11, 0x000000000000FF00
-;	loopstart:
-;		mov 	rdi, 77
-;		call 	print_num
-;		call 	print_ln
-;		mov 	rdi, rdx
-;		call 	print_num
-;		call 	print_ln
-;		mov 	rbx, rdx  		; temp
-;		and		rbx, r11
-;		mov 	rdi, rbx
-;		call 	print_num
-;		call 	print_ln
-;		cmp		rbx, 0 ; end of string?
-;		jmp 		finish
-;
-;		add		rcx, 1  ; count chars
-;		mov 	rax, r11
-;		mov 	rdi, rcx
-;		call 	print_num
-;		call 	print_ln
-;		call 	print_ln
-;		mov 	r12, 0x100
-;		mul		r12  ; shift 1 byte to the left
-;		mov 	r11, rax
-		;
-;		cmp 	rcx, 5
-;		jl 		loopstart
-;
-;	finish:
-;		mov 	rdi, 123
-;		call	print_num
+	mov 	r14, 0    ; counter
+	mov 	r15, rdi  ; address
+	mov 	rsi, rdi
+	loadbytes:
+		lodsq
+		mov 	r10, rax 					; string bytes , 8 bytes at a time
+		mov 	r13, 0x00000000000000FF		; byte mask
+	loopstart:
+		mov 	rax, r10
+		and 	rax, r13					; pick current byte
+		cmp		rax, 0 						; end of string?
+		jz		finish
+
+		inc		r14						    ; count chars
+		shl 	r13, 8  					; shift mask 8 bits to the left
+		cmp 	r13, 0						; shifted out of 64 bit range?
+		jnz 	loopstart
+	add 	r15, 8							; target next 8 byte chunk
+	mov 	rsi, r15                        ; setup argument for loading more bytes from memory
+	jmp 	loadbytes
+
+	finish:
+	mov 	rax, r14
 	ret
 
 print_ln: 
@@ -108,12 +85,9 @@ print_ln:
 	ret
 
 print_num:	
- 	push 	rdx
- 	push  	rdi
- 	push 	rbx
 	mov 	rax, rdi
 	mov 	rbx, 10 ; divisor
-	mov 	rdx, 0  ; remainder?
+	mov 	rdx, 0  ; no fractions
 	div 	rbx     ; rax / rbx -> rax
 	cmp		rax, 0
 	jz	 	exit_print_num
@@ -127,9 +101,6 @@ print_num:
 	mov 	rdi, rdx
 	or  	rdi, 0x30 	; rdx, now ready for print
 	call 	print_char
-	pop 	rbx
-	pop     rdi
-	pop 	rdx
 	ret
 
 start_printing:
@@ -160,3 +131,5 @@ fadd 	st1
 linefeed: db	10
 
 exclamate: 	db	33
+buf64bit: 	db 0x0000000000000000
+

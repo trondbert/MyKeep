@@ -14,6 +14,8 @@ public class Solution {
         try {
             bufferedReader.readLine();
             return solve(bufferedReader.readLine());
+            //System.out.println(buildRuns(Arrays.asList(4, 3, 2, 4, 5, 2, 1, 2)));
+            //return solve("4 3 2 3 4 6 6");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -55,7 +57,11 @@ public class Solution {
         while (iterator.hasNext()) {
             Integer lowerHeight = iterator.next();
             if (lowerHeight < height) {
-                runs.get(lowerHeight).add(0);
+                if (runs.get(lowerHeight).get(0) > 1) {
+                    runs.get(lowerHeight).add(0, 0);
+                } else {
+                    runs.get(lowerHeight).set(0, 0);
+                }
             } else {
                 break;
             }
@@ -70,8 +76,7 @@ public class Solution {
         }
         else {
             List<Integer> intervaller = runs.get(height);
-            intervaller.set(intervaller.size()-1,
-                    intervaller.get(intervaller.size() - 1) + 1);
+            intervaller.set(0, intervaller.get(0) + 1);
         }
     }
 }
