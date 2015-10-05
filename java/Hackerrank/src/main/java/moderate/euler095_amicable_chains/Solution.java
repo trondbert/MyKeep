@@ -8,6 +8,7 @@ import java.util.*;
 public class Solution {
     BufferedReader br; InputStreamReader isr;
     TreeSet<Integer> excluded = new TreeSet<>();
+    HashMap<Integer, Integer> divisorSumMap = new HashMap<>();
 
     private String readLine() { try { return br.readLine(); }
         catch (IOException e) { throw new RuntimeException(e); }}
@@ -26,6 +27,7 @@ public class Solution {
         int currentBase = 6;
         int maxChainLength = 0;
         int smallestBaseOfLongestChain = 6;
+
         while (currentBase <= maxChainMember) {
             List<Integer> chain = getChain(currentBase, maxChainMember);
             if (chain.size() > maxChainLength) {
@@ -34,7 +36,7 @@ public class Solution {
             }
             do {
                 currentBase++;
-            } while(excluded.contains(currentBase)); //Don't evaluate again
+            } while (excluded.contains(currentBase)); //Don't evaluate again
         }
         System.out.println(smallestBaseOfLongestChain);
     }
@@ -53,7 +55,7 @@ public class Solution {
     private boolean buildChain(List<Integer> members, int chainBase, int maxMember) {
         int currentMember = chainBase;
         do {
-            currentMember = sumOfFactors(currentMember);
+            currentMember = sumOfDivisors(currentMember);
             if (excluded.contains(currentMember)) return false;
             if (members.contains(currentMember)) {
                 int basePos = members.indexOf(currentMember);
@@ -72,17 +74,21 @@ public class Solution {
         return false;
     }
 
-    private int sumOfFactors(int base) {
-        int factorSum = 0;
-        int divisor = 1;
+    private int sumOfDivisors(int base) {
+        if (divisorSumMap.containsKey(base)) {
+            return divisorSumMap.get(base);
+        }
+
+        int divisorSum = 0, divisor = 1, maxDivisor = base / 2;
         do {
-            factorSum += divisor;
+            divisorSum += divisor;
             divisor++;
             while (base % divisor != 0 && divisor < base) {
                 divisor++;
             }
-        } while (divisor < base);
+        } while (divisor <= maxDivisor);
 
-        return factorSum;
+        divisorSumMap.put(base, divisorSum);
+        return divisorSum;
     }
 }
