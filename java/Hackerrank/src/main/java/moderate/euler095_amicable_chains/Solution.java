@@ -8,7 +8,8 @@ import java.util.*;
 public class Solution {
     BufferedReader br; InputStreamReader isr;
     TreeSet<Integer> excluded = new TreeSet<>();
-    HashMap<Integer, Integer> divisorSumMap = new HashMap<>();
+    HashMap<Integer, Set<Integer>> divisorsMap = new HashMap<>();
+    HashMap<Integer, Integer> divisorsSumMap = new HashMap<>();
 
     private String readLine() { try { return br.readLine(); }
         catch (IOException e) { throw new RuntimeException(e); }}
@@ -75,20 +76,29 @@ public class Solution {
     }
 
     private int sumOfDivisors(int base) {
-        if (divisorSumMap.containsKey(base)) {
-            return divisorSumMap.get(base);
+        if (divisorsMap.containsKey(base)) {
+            return divisorsSumMap.get(base);
         }
 
-        int divisorSum = 0, divisor = 1, maxDivisor = base / 2;
+        TreeSet<Integer> divisors = new TreeSet<>();
+        int divisor = Math.max(1, base / 2);
         do {
-            divisorSum += divisor;
-            divisor++;
-            while (base % divisor != 0 && divisor < base) {
-                divisor++;
+            while (divisor > 1 && base % divisor != 0) {
+                divisor--;
             }
-        } while (divisor <= maxDivisor);
+            divisors.add(divisor);
+            if (divisorsMap.containsKey(divisor)) {
+                divisors.addAll(divisorsMap.get(divisor));
+            }
+            divisor--;
+        } while (divisor >= 1);
 
-        divisorSumMap.put(base, divisorSum);
-        return divisorSum;
+        Integer sum = 0;
+        for (Integer integer : divisors) {
+            sum += integer;
+        }
+        divisorsMap.put(base, divisors);
+        divisorsSumMap.put(base, sum);
+        return sum;
     }
 }
