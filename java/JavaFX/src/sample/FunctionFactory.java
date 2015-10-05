@@ -11,16 +11,17 @@ import static java.lang.Math.pow;
 
 public class FunctionFactory {
 
-    public List<Point2D> getFunctionPoints(Map<String, Double> params) {
-        Double a = params.get("a");
-        Double b = params.get("b");
+    public List<Point2D> getFunctionPoints(Map<GraphApp.Params, Double> params) {
+        Double a = params.get(GraphApp.Params.a);
+        Double b = params.get(GraphApp.Params.b);
+        Double c = params.get(GraphApp.Params.c);
 
-        List<Point2D> pointsPolar = makePointsPolar(angle -> Math.log(b*angle + (a * PI)),
+        List<Point2D> pointsPolar = makePointsPolar(angle -> (a * Math.pow(angle, 2) + b * angle + c),
                 -2 * PI,
                 2 * PI,
                 0.005);
 
-        List<Point2D> points = makePointsPolar(x -> 3 - pow((x - a), 2),
+        List<Point2D> points = makePointsPolar(x -> b - pow((x - a), 2),
                 -10,
                 10,
                 0.01

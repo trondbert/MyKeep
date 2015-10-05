@@ -3,7 +3,6 @@ package sample;
 import javafx.application.Application;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
@@ -17,7 +16,8 @@ import java.util.function.*;
 
 import static java.lang.Math.*;
 import static java.lang.String.format;
-import static sample.GraphApp.NodeID.valueOf;
+import static java.util.Arrays.asList;
+import static sample.GraphApp.Params.*;
 
 public class GraphApp extends Application {
 
@@ -37,24 +37,47 @@ public class GraphApp extends Application {
     static double SCENE_Y_MIN = SCENE_HEIGHT;
     static double SCENE_Y_MAX = 0;
 
-    private Map<NodeID, Text> textMap = new HashMap<>();
+    private static Map<Enum, Text> textMap = new HashMap<>();
 
-    private Map<String, Double> functionParams = new TreeMap<>();
+    private static Map<Params, Double> functionParams = new TreeMap<>();
     private GraphDrawer graphDrawer = new GraphDrawer();
-    private String controlledParameter;
+    private Params controlledParameter;
 
-    enum NodeID {ANGLE, PARAM_A, PARAM_B, X_Y}
+    enum Params {
+        a(val -> val + angleStep(), val -> val - angleStep()),
+        b(val -> val + angleStep(), val -> val - angleStep()),
+        c(val -> val + angleStep(), val -> val - angleStep()),
+        s(val -> val * 10, val -> val / 10);
+
+        final DoubleUnaryOperator increase;
+        final DoubleUnaryOperator decrease;
+
+        Params(DoubleUnaryOperator increase, DoubleUnaryOperator decrease ) {
+            this.increase = increase;
+            this.decrease = decrease;
+        }
+    }
+
+    enum NodeID {ANGLE, X_Y}
+
+    private static double angleStep() {
+        return functionParams.get(Params.s);
+    }
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        functionParams.put("a", 3.0);
-        functionParams.put("b", 1.0);
+        functionParams.put(a, 1.0);
+        functionParams.put(b, 1.0);
+        functionParams.put(c, 1.0);
+        functionParams.put(s, 0.1);
         controlledParameter = functionParams.keySet().iterator().next();
 
         textMap.put(NodeID.ANGLE, new Text(5, 15, "Angle (rad): "));
         textMap.put(NodeID.X_Y, new Text(5, 50, "(x,y): "));
-        textMap.put(NodeID.PARAM_A, new Text(5, 70, "a: " + floatFormat.format(functionParams.get("a"))));
-        textMap.put(NodeID.PARAM_B, new Text(5, 90, "b: " + floatFormat.format(functionParams.get("b"))));
+        textMap.put(a, new Text(5, 70, "a: " + floatFormat.format(functionParams.get(a))));
+        textMap.put(b, new Text(5, 90, "b: " + floatFormat.format(functionParams.get(b))));
+        textMap.put(c, new Text(5, 110, "c: " + floatFormat.format(functionParams.get(c))));
+        textMap.put(s, new Text(5, 130, "step: " + floatFormat.format(functionParams.get(s))));
 
         Group root = new Group();
         root.getChildren().addAll(textMap.values());
@@ -96,23 +119,38 @@ public class GraphApp extends Application {
 
     void setupOnKeyPressed(Scene scene) {
         scene.setOnKeyPressed(event -> {
-            if (event.getCode().equals(KeyCode.UP)) {
-                Double newValue = functionParams.get(controlledParameter) + 0.2;
-                functionParams.put(controlledParameter, newValue);
-            }
-            else if (event.getCode().equals(KeyCode.DOWN)) {
-                Double newValue = functionParams.get(controlledParameter) - 0.2;
-                functionParams.put(controlledParameter, newValue);
-            }
-            else if (event.getText() != null && functionParams.get(event.getText()) != null) {
-                controlledParameter = event.getText();
-            }
-            else
-                return;
+            Function<String, Boolean> paramExists = (paramName ->
+                    asList(Params.values()).stream().anyMatch(val -> val.name().equals(paramName)));
 
-            Text paramText = textMap.get(valueOf("PARAM_" + controlledParameter.toUpperCase()));
-            String newValue = floatFormat.format(functionParams.get(controlledParameter));
-            paramText.setText(MessageFormat.format("{0}: {1}", controlledParameter, newValue));
+            if (event.getText() != null && paramExists.apply(event.getText())) {
+                controlledParameter = Params.valueOf(event.getText());
+                return;
+            }
+
+            Function<Void, String> fds  = val -> "";
+
+            DoubleUnaryOperator changeParam =
+                ((Function<KeyCode, DoubleUnaryOperator>) (eventCode -> {
+                    switch (eventCode) {
+                        case UP:    return controlledParameter.increase;
+                        case DOWN:  return controlledParameter.decrease;
+                        default:    return null;
+                    }
+                })).apply(event.getCode());
+
+            if (changeParam == null) {
+                return;
+            }
+
+            Double paramValue = functionParams.get(controlledParameter);
+            double newValue = changeParam.applyAsDouble(paramValue);
+            functionParams.put(controlledParameter, newValue);
+
+            Text paramText = textMap.get(controlledParameter);
+            paramText.setText(
+                    MessageFormat.format("{0}: {1}",
+                            controlledParameter,
+                            floatFormat.format(newValue)));
             redraw(1, (Group) scene.getRoot());
         });
     }

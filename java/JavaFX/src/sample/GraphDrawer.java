@@ -67,13 +67,12 @@ public class GraphDrawer {
                 });
         double tickLineLength = xWidth / 200.0;
 
-        double tickX = ceil(xMin / xStep) * xStep;
-        while (tickX < xMax) {
+        for (double tickX = ceil(xMin / xStep) * xStep;  tickX < xMax; tickX += xStep) {
+            if (tickX == 0.0) continue;
             axesAndTicks.add(line(tickX, -tickLineLength, tickX, tickLineLength));
             String tickText = formattedAxisMark(tickX);
             double textDisplacement = tickText.length() * xWidth / 230;
             axesAndTicks.add(text(tickX - textDisplacement, tickLineLength * 1.4, tickText));
-            tickX += xStep;
         }
     }
 
@@ -92,13 +91,12 @@ public class GraphDrawer {
                 });
         double tickLineLength = ySpan / 200.0;
 
-        double tickY = ceil(yMin / yStep) * yStep;
-        while (tickY < yMax) {
+        for (double tickY = ceil(yMin / yStep) * yStep; tickY < yMax; tickY += yStep) {
+            if (tickY == 0.0) continue;
             axesAndTicks.add(line(-tickLineLength, tickY, tickLineLength, tickY));
             String tickText = formattedAxisMark(tickY);
             double textDisplacement = ySpan / 140;
             axesAndTicks.add(text(tickLineLength * 1.4, tickY - textDisplacement, tickText));
-            tickY += yStep;
         }
     }
 
