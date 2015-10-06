@@ -10,12 +10,18 @@ public class Solution {
     TreeSet<Integer> excluded = new TreeSet<>();
     HashMap<Integer, Set<Integer>> divisorsMap = new HashMap<>();
     HashMap<Integer, Integer> divisorsSumMap = new HashMap<>();
+    List<Integer> primes = new ArrayList<>();
+    private Set<Integer> emptyIntegerSet;
 
     private String readLine() { try { return br.readLine(); }
         catch (IOException e) { throw new RuntimeException(e); }}
 
     public Solution() {
         isr = new InputStreamReader(System.in); br = new BufferedReader(isr);
+        divisorsSumMap.put(1, 1);
+        emptyIntegerSet = Collections.emptySet();
+        divisorsMap.put(1, emptyIntegerSet);
+        primes.add(2); primes.add(3);
     }
 
     public static void main(String[] args) {
@@ -56,7 +62,7 @@ public class Solution {
     private boolean buildChain(List<Integer> members, int chainBase, int maxMember) {
         int currentMember = chainBase;
         do {
-            currentMember = sumOfDivisors(currentMember);
+            currentMember = sumDivisors2(currentMember);
             if (excluded.contains(currentMember)) return false;
             if (members.contains(currentMember)) {
                 int basePos = members.indexOf(currentMember);
@@ -79,9 +85,13 @@ public class Solution {
         if (divisorsMap.containsKey(base)) {
             return divisorsSumMap.get(base);
         }
-
         TreeSet<Integer> divisors = new TreeSet<>();
-        int divisor = Math.max(1, base / 2);
+        int initialDivisor = 1;
+        do {
+            initialDivisor++;
+        }
+        while (base % initialDivisor != 0);
+        int divisor = Math.max(1, base / initialDivisor--);
         do {
             while (divisor > 1 && base % divisor != 0) {
                 divisor--;
@@ -100,5 +110,61 @@ public class Solution {
         divisorsMap.put(base, divisors);
         divisorsSumMap.put(base, sum);
         return sum;
+    }
+
+    int sumDivisors2(int base) {
+        if (base == 1) return 1;
+
+        Set<Integer> divisors = divisorsRaw(base);
+        divisors.remove(base);
+        divisors.add(1);
+        int sum = 0;
+        for (Integer divisor : divisors) {
+            sum += divisor;
+        }
+        return sum;
+    }
+
+    Set<Integer> divisorsRaw(int base) {
+        if (divisorsMap.containsKey(base)) return divisorsMap.get(base);
+        TreeSet<Integer> divisors = new TreeSet<>();
+        divisors.add(base);
+        int primesIndex = 0;
+        int divisor;
+        do {
+            divisor = primes.size() > primesIndex ? primes.get(primesIndex) : findNewPrime();
+            primesIndex++;
+        }
+        while (base % divisor != 0);
+        if (divisor != base && divisor != 1) {
+            divisors.add(divisor);
+            int remainder = base / divisor;
+            divisors.add(remainder);
+
+            Set<Integer> rightSet = divisorsRaw(remainder);
+            divisors.addAll(rightSet);
+            for (Integer factorRight : rightSet) {
+                divisors.add(divisor * factorRight);
+            }
+        }
+        return divisors;
+    }
+
+    int findNewPrime() {
+        int candidate = primes.get(primes.size()-1) + 2;
+        boolean prime;
+        do {
+            Integer maxDivisor = (int)Math.sqrt(candidate);
+            prime = true;
+            for (Integer primeI : primes) {
+                if (primeI > maxDivisor) break;
+                if (candidate % primeI == 0) {
+                    prime = false;
+                    break;
+                }
+            }
+        } while ( ! prime && (candidate += 2) != 0);
+        primes.add(candidate);
+        return candidate;
     }
 }
