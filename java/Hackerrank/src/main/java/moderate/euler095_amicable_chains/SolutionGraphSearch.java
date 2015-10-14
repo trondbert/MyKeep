@@ -5,175 +5,150 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.TreeSet;
 
+import static java.lang.Integer.MAX_VALUE;
 import static java.lang.Math.min;
 import static java.lang.Math.pow;
 
 public class SolutionGraphSearch {
-
-    static BufferedReader br;
-    static InputStreamReader isr;
-    List<Integer> primes = new ArrayList<>(500);
+    TreeSet<Integer> primes = new TreeSet<>();
 
     boolean[]   excluded;
-    int[]       maxFactor;
-    short[]     maxFactorCount;
-    int[]       sumSmallerDiv;
-    int[]       sumDiv;
-    short[]     chainLength;
-    int[]       chainBase;
+    int[]       chainBases;
+    short[]     chainLengths;
+    int[]       divSums;
+    short[]     maxFactorCounts;
+    int[]       maxFactors;
+    int[]       smallerDivsSum;
+
     int         maxChainMember;
-
-    int         minBase = 0;
     short       maxChainLength = 0;
+    int         minBase = 0;
     short       s1 = (short)1;
+    int         maxPrime;
 
-    static boolean debug = false;
-
-    private static String readLine() { try { return br.readLine(); }
-    catch (IOException e) { throw new RuntimeException(e); }}
-
-    public SolutionGraphSearch(Integer maxChainMember) {
-        this.maxChainMember = maxChainMember;
-        excluded =      new boolean[maxChainMember + 1];
-        maxFactor =      new int[maxChainMember + 1];
-        sumSmallerDiv =  new int[maxChainMember + 1];
-        sumDiv =         new int[maxChainMember + 1];
-        maxFactorCount = new short[maxChainMember + 1];
-        chainLength =   new short[maxChainMember + 1];
-        chainBase    =   new int[maxChainMember + 1];
-
-        for (int i = 0; i < sumDiv.length; i++) {
-            sumDiv[i] = i + 1;
+    private static String readLine() {
+        try (InputStreamReader isr = new InputStreamReader(System.in);
+             BufferedReader br = new BufferedReader(isr)) {
+            return br.readLine();
         }
-        Arrays.fill(chainBase, maxChainMember);
+        catch (IOException e) { throw new RuntimeException(e); }
+    }
+
+    public SolutionGraphSearch(Integer chainLimit) {
+        maxChainMember      = chainLimit;
+        excluded            = new boolean[maxChainMember + 1];
+        maxFactors          = new int[maxChainMember + 1];
+        smallerDivsSum      = new int[maxChainMember + 1];
+        divSums             = new int[maxChainMember + 1];
+        maxFactorCounts     = new short[maxChainMember + 1];
+        chainLengths        = new short[maxChainMember + 1];
+        chainBases          = new int[maxChainMember + 1];
+
+        for (int i = 0; i < maxChainMember +1; i++) {
+            divSums[i] = i + 1;
+            maxFactors[i] = MAX_VALUE;
+        }
+        Arrays.fill(chainBases, maxChainMember);
         primes.add(2); primes.add(3);
         for (Integer prime : primes) {
-            exclude(prime);
+            excluded[prime] = true;
         }
-        exclude(1);
+        excluded[1] = true;
     }
 
     public static void main(String[] args) {
-        isr = new InputStreamReader(System.in); br = new BufferedReader(isr);
-        long startTime = System.currentTimeMillis();
-        Integer maxChainMember = Integer.parseInt(readLine());
+        int maxChainMember = Integer.parseInt(readLine());
+
         SolutionGraphSearch solution = new SolutionGraphSearch(maxChainMember);
 
-        solution.solve();
+        solution.maxPrime = solution.maxChainMember / 2;
+        solution.generateVisits();
+        solution.findChains();
         System.out.println(solution.minBase);
-        long endTime = System.currentTimeMillis();
-        if (debug)
-            System.out.println(String.format("%.1f", (endTime-startTime) / 1000.0));
-    }
-
-    private int solve() {
-        int maxPrime = maxChainMember / 12;
-        generatePrimes(maxPrime);
-
-        int currVisit = 1;
-        maxFactor[currVisit] = 1;
-        maxFactorCount[currVisit] = 1;
-        sumSmallerDiv[currVisit] = 1;
-        sumDiv[currVisit] = 1;
-
-        generateVisits();
-        findChains();
-
-        return 0;
     }
 
     private void findChains() {
-        int currVisit;
-        for ( currVisit = 1 ; currVisit < maxChainMember; currVisit++) {
+        for ( int currVisit = 1 ; currVisit <= maxChainMember; currVisit++) {
             if (excluded[currVisit]) continue;
 
             ArrayList<Integer> chain = new ArrayList<>();
-            int baseFound = followChain(chain, currVisit);
+            chain.add(currVisit);
+            int baseFound;
+            baseFound = followChain(chain, currVisit);
             if (baseFound < 0) continue;
 
-            short chainLength = (short) chain.size();
+            short chainLength = (short) (chain.size() - baseFound - 1);
             if (chainLength >= maxChainLength) {
                 minBase = chainLength > maxChainLength ? chain.get(baseFound)
                                                        : min(minBase, chain.get(baseFound));
                 maxChainLength = chainLength;
             }
-            exclude(currVisit);
+            excluded[currVisit] = true;
         }
     }
 
     private void generateVisits() {
-        int currVisit;
-        for ( currVisit = 1 ; currVisit < maxChainMember; currVisit++) {
-            int sumDivCurr          = sumDiv[currVisit];
-            int maxFactorCurrVisit  = maxFactor[currVisit];
-            int maxPrimeForVisit    = maxChainMember / currVisit;
-            int newVisit = 0;
-            for (Integer prime : primes) {
-                if (prime < maxFactorCurrVisit) continue;
-                newVisit = currVisit * prime;
-                if (prime > maxPrimeForVisit) break;
+        maxFactors[1] = 1;
+        maxFactorCounts[1] = 1;
+        smallerDivsSum[1] = 1;
+        divSums[1] = 1;
 
-                maxFactorCount[newVisit] = prime == maxFactorCurrVisit ?
-                        (short)(maxFactorCount[currVisit] + s1) : s1;
-                maxFactor[newVisit] = prime;
-                sumSmallerDiv[newVisit] = prime == maxFactorCurrVisit ?
-                        sumSmallerDiv[currVisit] : sumDivCurr;
-                sumDiv[newVisit] = (int) (sumSmallerDiv[newVisit] * pow(prime, maxFactorCount[newVisit])
-                        + sumDivCurr);
-
-                if (sumDiv[newVisit] - newVisit > maxChainMember) {
-                    exclude(newVisit);
-                }
-            };
+        while (!primes.isEmpty()) {
+            multiplyWithNewPrimes();
+            findNewPrimes();
         }
     }
 
-    private void exclude(int visit) {
-        excluded[visit] = true;
+    private void multiplyWithNewPrimes() {
+        for (Integer prime : primes) {
+            int maxVisit    = maxChainMember / prime;
+            for (int currVisit = 1; currVisit <= maxVisit; currVisit++) {
+                Integer maxFactor       = maxFactors[currVisit];
+                if (prime < maxFactor) continue;
+
+                int newVisit = currVisit * prime;
+                int sumDiv = divSums[currVisit];
+                maxFactorCounts[newVisit] = prime.equals(maxFactor) ? (short) (maxFactorCounts[currVisit] + s1) : s1;
+                maxFactors[newVisit] = prime;
+                smallerDivsSum[newVisit] = (prime.equals(maxFactor)) ? smallerDivsSum[currVisit] : sumDiv;
+                divSums[newVisit] = (int) (smallerDivsSum[newVisit] * pow(prime, maxFactorCounts[newVisit])
+                        + sumDiv);
+                if (this.divSums[newVisit] - newVisit > this.maxChainMember) {
+                    excluded[newVisit] = true;
+                }
+            }
+        }
+    }
+
+    private void findNewPrimes() {
+        int firstPrime = primes.last() + 2;
+        while (maxFactors[firstPrime] != MAX_VALUE) {
+            firstPrime++;
+        }
+        int maxCandPrime = min(maxPrime, firstPrime * 2 - 1);
+
+        primes.clear();
+        for (int jump = 2; firstPrime <= maxCandPrime; jump = 6-jump, firstPrime += 2) {
+            if (maxFactors[firstPrime] == MAX_VALUE)
+                primes.add(firstPrime);
+        }
     }
 
     private int followChain(ArrayList<Integer> chain, int currVisit) {
-        chain.add(currVisit);
-        int nextInChain = sumDiv[currVisit] - currVisit;
+        int nextInChain = divSums[currVisit] - currVisit;
         if (excluded[nextInChain]) return -1;
-        boolean outOfBounds = nextInChain <= 1 || nextInChain > maxChainMember;
-        if (outOfBounds) {
-            return -1;
-        }
-        if (chain.contains(nextInChain)) {
-            exclude(nextInChain);
-            return chain.indexOf(nextInChain);
-        }
-        //System.out.println(nextInChain)
-        int result = followChain(chain, nextInChain);
-        exclude(nextInChain);
+
+        int result;
+        boolean loop = chain.contains(nextInChain);
+        chain.add(nextInChain);
+        if (loop)
+            result = chain.indexOf(nextInChain);
+        else
+            result = followChain(chain, nextInChain);
+
+        excluded[nextInChain] = true;
         return result;
-    }
-
-
-    SolutionGraphSearch generatePrimes(int maxPrime) {
-        int candidate = primes.get(primes.size()-1) + 2;
-        int largestPrime = 0;
-        boolean prime;
-        do {
-            Integer maxDivisor = (int)Math.sqrt(candidate);
-            prime = true;
-            for (Integer primeI : primes) {
-                if (primeI > maxDivisor) break;
-                if (candidate % primeI == 0) {
-                    prime = false;
-                    break;
-                }
-            }
-            if (prime) {
-                primes.add(candidate);
-                exclude(candidate);
-                largestPrime = candidate;
-            }
-            candidate += 2;
-        } while ( largestPrime < maxPrime);
-        return this;
     }
 }
