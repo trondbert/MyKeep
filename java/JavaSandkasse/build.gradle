@@ -6,11 +6,12 @@ compileJava.sourceCompatibility = '1.8'
 repositories { mavenCentral() }
 
 dependencies {
-  compile       'org.hsqldb:hsqldb:2.3.2'
-  compile       'org.hibernate:hibernate-core:4.3.7.Final'
-  compile       'com.oracle:ojdbc7:12.1.0.1'
-  testCompile   'junit:junit:4.11'
-  testCompile   'org.easytesting:fest-assert:1.4'
+    compile 'org.hsqldb:hsqldb:2.3.2'
+    compile 'org.hibernate:hibernate-core:4.3.7.Final'
+    compile 'com.oracle:ojdbc7:12.1.0.1'
+    testCompile 'junit:junit:4.11'
+    testCompile 'org.easytesting:fest-assert:1.4'
 
+    
 }
 

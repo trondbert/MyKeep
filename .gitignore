@@ -1,6 +1,7 @@
 .DS_Store
-.idea
+.idea/
 out
 build
 .gradle
 *.iml
+bin/

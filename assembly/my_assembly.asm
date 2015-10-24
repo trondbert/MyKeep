@@ -1,6 +1,6 @@
 EXTERN int_to_str
 EXTERN print_bytes
-EXTERN print_char 
+EXTERN print_char
 EXTERN print_ln
 EXTERN print_num
 EXTERN print_strlen
@@ -32,7 +32,7 @@ time_pretty:    resq    0
 section .text
 
 global start
-EXTERN _printf 
+EXTERN _printf
 
 start:
     mov     rax, 0x2000074 ; 116 gettimeofday

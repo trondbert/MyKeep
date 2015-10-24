@@ -1,4 +1,5 @@
 ; /usr/local/bin/nasm -f macho64 printing.asm && ld -macosx_version_min 10.7.0 -lSystem -o printing64 printing.o && ./printing64
+; /usr/local/bin/nasm -f macho64 printing.asm && ld -macosx_version_min 10.7.0 -lSystem -o printing64 printing.o && ./printing64
 
 global start_printing
 global print_char
@@ -7,6 +8,8 @@ global print_num
 global print_bytes
 global print_str_zeroterm
 global print_strlen
+global print_bytes_ln
+global print_num_ln
  
 section .text
 
@@ -23,13 +26,15 @@ print_bytes: ; rdi holder bytes som skal skrives, rsi holder antall bytes
     ret
 
 print_char: ; rdi holder characteren som skal skrives
-	push 	rdi
+    push    r11
+    push    rdi
 	mov 	rsi, rsp ; Setter rsi til stack-pointer-adresse. Peker altså til opprinnelig rsi-verdi som sist ble pusha på stack
 	mov     rax, 0x2000004 ; write
     mov     rdi, 1 ; stdout
     mov     rdx, 1 ; antall bytes
     syscall
-    pop 	rdi
+    pop     rdi
+    pop     r11
     ret
 
 print_str_zeroterm: ; rdi peker på strengen
@@ -84,51 +89,46 @@ print_ln:
 	pop		rdi
 	ret
 
-print_num:	
+print_num:
+    call    print_num_rec
+    ret
+
+print_num_rec:
+    push    rdi
 	mov 	rax, rdi
 	mov 	rbx, 10 ; divisor
 	mov 	rdx, 0  ; no fractions
 	div 	rbx     ; rax / rbx -> rax
 	cmp		rax, 0
-	jz	 	exit_print_num
+	jz	 	exit_print_num_rec
 
 	push 	rdx
 	mov 	rdi, rax
-	call 	print_num
+	call 	print_num_rec
 	pop		rdx
 	
-	exit_print_num:
+	exit_print_num_rec:
 	mov 	rdi, rdx
 	or  	rdi, 0x30 	; rdx, now ready for print
 	call 	print_char
+	pop    rdi
 	ret
 
-start_printing:
-	mov     rsi, 0x0a
-	call 	print_char
-	mov 	rax, 5239
-	mov 	rcx, 0
-	call 	print_num
-	mov     rax, 0x2000004 ; write
-    mov     rdi, 1 ; stdout
-    mov     rsi, rsp
-    mov     rdx, 5
-    syscall
+print_num_ln:
+    call    print_num
+    call    print_ln
+    ret
 
-	mov     rsi, 0x0a
-	call 	print_char
+print_bytes_ln:
+    call    print_bytes
+    call    print_ln
+    ret
 
-    mov     rax, 0x2000001 ; exit
-    mov     rdi, 0
-    syscall
- 
 section .data
  
 msg:    db      "Hello", 10
 .len:   equ     $ - msg
 fadd 	st1
-
-linefeed: db	10
 
 exclamate: 	db	33
 buf64bit: 	db 0x0000000000000000

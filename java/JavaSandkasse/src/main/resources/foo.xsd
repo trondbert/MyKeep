@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema version="1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <xs:element name="order" type="Order"/>
+
+    <xs:complexType name="Order">
+        <xs:sequence>
+            <xs:element name="customer" type="Customer" minOccurs="1"/>
+            <xs:element name="orderLines" type="OrderLine" minOccurs="1" maxOccurs="unbounded"/>
+            <xs:element name="data" type="xs:anyType"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="Customer">
+        <xs:sequence>
+            <xs:element name="firstName" type="xs:string" minOccurs="0"/>
+            <xs:element name="lastName" type="xs:string" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="OrderLine">
+        <xs:sequence>
+            <xs:element name="productNumber" type="xs:string" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="unitCount" type="xs:int" minOccurs="1" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>

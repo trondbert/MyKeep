@@ -2,20 +2,18 @@ import java.io.*;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static java.lang.Integer.parseInt;
 import static java.lang.Math.ceil;
 import static java.lang.Math.max;
-import static java.util.Arrays.asList;
 import static java.util.stream.IntStream.rangeClosed;
 
 public class Solution {
     public static final int infinitish = 10000000;
     private final Supplier<String> linesSupplier;
 
-    private static List<String> mockedTask = new ArrayList<>(asList(
+    private static List<String> mockedTask = new ArrayList<>(Arrays.<String>asList(
             "2","3","32 62","42 68","12 98","7","95 13","97 25","93 37","79 27","75 19","49 47","67 17","4","8 52","6 80","26 42","2 72","9","51 19","39 11","37 29","81 3","59 5","79 23","53 7","43 33","77 21"));
     static Supplier<String> linesSupplier2 = () -> mockedTask.size() > 0 ? mockedTask.remove(0) : null;
 

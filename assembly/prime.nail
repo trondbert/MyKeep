@@ -1,0 +1,55 @@
+EXTERN mod
+EXTERN print_bytes
+EXTERN print_bytes_ln
+EXTERN print_num
+EXTERN print_num_ln
+EXTERN print_ln
+EXTERN print_str_zeroterm
+EXTERN sqrt
+EXTERN str_to_int
+
+
+global start
+
+section .data
+
+msg_prime:      dw "Prime", 0
+.len:           equ $ - msg_prime
+
+msg_non_prime:  dw "Not prime", 0
+.len:           equ $ - msg_non_prime
+
+section .text
+
+start:
+    mov 	r15, [rsp+16]   ; input number
+    call    str_to_int, r15
+
+    call    sqrt, rax
+    mov     r14, rax        ; sqrt number
+    call    mod, r15, 2
+    cmp     rax, 0
+    jz      non_prime
+    mov     rsi, 3
+
+    each_divisor:           ; while divisor < input_number
+        cmp     rsi, r14
+        jg      prime           ; if divisor > sqrt
+        call    mod, r15, rsi
+        cmp     rax, 0
+        jz      non_prime
+        add     rsi, 2
+        jmp     each_divisor
+
+    non_prime:
+        call    print_bytes_ln, msg_non_prime, msg_non_prime.len
+        jmp     end_start
+
+    prime:
+       call    print_bytes_ln, msg_prime, msg_prime.len
+
+    end_start:
+    mov     rax, 0x2000001 ; exit
+    mov     rdi, 0
+    syscall
+
