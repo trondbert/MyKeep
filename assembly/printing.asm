@@ -17,9 +17,9 @@ print_bytes: ; rdi holder bytes som skal skrives, rsi holder antall bytes
 	push 	rdi
 	push 	rsi
 	mov     rax, 0x2000004 ; write
-    mov 	rdx, rsi ; antall bytes
-    mov		rsi, rdi ; hva skal skrives
     mov     rdi, 1 ; stdout
+    mov		rsi, rdi ; hva skal skrives
+    mov 	rdx, rsi ; antall bytes
     syscall
     pop 	rsi
     pop 	rdi
