@@ -20,8 +20,8 @@ start:
     mov     rax, 0x2000003 ; read
     mov     rdi, r12
     mov     rsi, fd_in
-    mov     rdx, 255       ; nof bytes
-    syscall
+    mov     rdx, 255
+    syscall                ; read from file (r12) into file buffer (fd_in)
 
     mov     rdi, r12
     mov     rax, 0x2000006 ; close
@@ -46,16 +46,7 @@ start:
     jmp     new_byte
     bytes_read:
 
-    mov     rax, 0x55 ; create
-    mov     rdi, outfile_name
-    mov     rsi, 0x0600
-    syscall
-
-    mov     rax, 0x2000005 ; open
-    mov     rdi, outfile_name
-    mov     rsi, 2
-    mov     rdx, 0x0777
-    syscall
+    syscall 0x2000005, outfile_name, 0x0222, 0777o ; open file (and create if not exists)
     mov     r15, rax
 
     mov     r14, 0x34353937  ; address increases in direction right to left

@@ -1,3 +1,4 @@
+umask 000
 
 rm -f bin/file_io.o
 rm -f bin/file_io
