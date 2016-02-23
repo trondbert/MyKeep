@@ -1,0 +1,77 @@
+<html>
+<head>
+<title>Bruk av CSS i HTML-fil</title>
+
+<script language = "JavaScript">
+<!--Skjul (gamle browsarar)
+
+function chgColor(color)
+{
+	if(color=='choose')
+	{
+		color = prompt("Which color would you like on this element?",color);
+		chgColor(color);
+	}
+	else if(color!='')
+		window.event.srcElement.bgColor= color;
+	else
+		window.event.srcElement.bgColor= "turqoise";
+}
+
+function chgBack()
+{
+	window.event.srcElement.bgColor="";
+}
+function setMarked()
+{
+	window.event.srcElement.checked = true;
+}
+
+//Slutt på skjuling -->
+</script>
+
+</head>
+
+<body> 
+<table border = "1">
+<tr>
+<td 
+onClick="chgColor('choose')" alt = "Trykk for å forandre farge">
+Tøys
+</td>
+<td 
+onClick="chgColor('choose')" alt = "Trykk for å forandre farge">
+Tull</td>
+</tr>
+</table>
+
+<form>
+
+<table>
+<tr>
+	<td>
+		Ap
+	</td>
+	<td>
+		<input type = "radio" name = "valg" value = "Ap" id = 'ap'
+		onMouseover="krf.checked = true;" onClick = "return false;">
+	</td>
+</tr>
+</tr>
+	<td>
+		Krf
+	</td>
+	<td>
+		<input type = "radio" name = "valg" value = "Krf" id = 'krf'
+		onMouseover="ap.checked = true;" onClick = "; return false;">
+	</td>
+</tr>
+</table>
+
+</form>
+
+
+
+
+</body>
+</html>

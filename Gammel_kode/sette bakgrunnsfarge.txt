@@ -1,0 +1,29 @@
+<html>
+<head>
+
+<script language = "JavaScript">
+<!--Skjul (gamle browsarar)
+
+function chgColor()
+	window.event.srcElement.bgColor="lemonchiffon";
+
+function chgBack()
+{
+	window.event.srcElement.bgColor="";
+} 
+
+//Slutt på skjuling -->
+</script>
+
+</head>
+
+<body> 
+<table>
+<tr>
+<td onMouseover="chgColor()" onMouseout="chgBack()">Tøys</td>
+<td>Tull</td>
+</tr>
+</table>
+
+</body>
+</html>

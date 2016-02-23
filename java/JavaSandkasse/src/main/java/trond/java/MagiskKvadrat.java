@@ -73,7 +73,7 @@ import java.util.stream.IntStream;
     private void solve() {
         try {
             new Thread(debugChecker).start();
-            final Map<Integer, Long> sumMap = equalSums2();
+            final Map<Integer, Long> sumMap = equalSums();
 
             out.println("Result:");
             sumMap.entrySet().stream().filter(it -> it.getValue() > 0L)
@@ -88,7 +88,7 @@ import java.util.stream.IntStream;
     }
 
     /**
-     * All combinations of ciphers that add up to the given sum.
+     * All combinations of digits that add up to the given sum.
      *
      * @param sum The given sum.
      * @return Ditto
@@ -115,7 +115,7 @@ import java.util.stream.IntStream;
      *
      * @return Ditto
      */
-    private Map<Integer, Long> equalSums2() {
+    private Map<Integer, Long> equalSums() {
         final HashMap<Integer, Long> result = new HashMap<>();
         for (int sum = 0; sum <= middleSum; sum++) {
             final long numberOfEqualSumBoards = getNumberOfEqualSumBoards(sum);
@@ -154,15 +154,7 @@ import java.util.stream.IntStream;
                     row4 = calculateLastRow(sum);
 
                     if (rowOkCombination(row4, sum) && diagonalsEqual(sum, row1, row2, row3, row4)) {
-                        //debugln(format("sum %d: %d %d %d %d%n", sum, row1, row2, row3, row4));
                         numberOfEqualSumBoards++;
-                        /*String sumCombinationIndexes = getCombinationString(row1, row2, row3, row4);
-                        if (hitsPerCombinationIndexSum.get(sumCombinationIndexes) == null)
-                            hitsPerCombinationIndexSum.put(sumCombinationIndexes, 0);
-                        hitsPerCombinationIndexSum
-                                .put(sumCombinationIndexes, hitsPerCombinationIndexSum.get(sumCombinationIndexes) + 1);
-                        */
-                        //printBoard(new int[][] { row1, row2, row3, row4 });
                     }
                 }
             }

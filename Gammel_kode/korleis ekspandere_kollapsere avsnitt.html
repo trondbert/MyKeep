@@ -1,0 +1,75 @@
+<html>
+<head>
+<script language="JavaScript">
+<!--
+
+function museklikk()
+{
+var tagName, tagId, parentTag, newDisplayState;
+
+tagName = window.event.srcElement.tagName;
+tagId = window.event.srcElement.id;
+parentTag = window.event.srcElement.parentElement.tagName;
+
+if(tagName=="H2" && parentTag == "BODY")
+{
+	if(document.all(tagId+"p").style.display=="none")
+		newDisplayState = "";
+	else
+		newDisplayState = "none";
+
+	document.all(tagId+"p").style.display = newDisplayState;
+	//alert(document.all(tagId+"p").children.length);
+}
+}
+
+-->
+</script>
+</head>
+<body onClick="museklikk()">
+
+<H2 id = "head1">
+Klikk her for å  lese om Yang-Tsekiang
+</H2>
+<p id = "head1p" style="display:none">
+fgfd fd fd dfg gfdt yt tryrt h vcs dtj hf hgfh
+fgfd fd fd dfg gfdt yt tryrt h vcs dtj hf hgfh
+fgfd fd fd dfg gfdt yt tryrt h vcs dtj hf hgfh
+fgfd fd fd dfg gfdt yt tryrt h vcs dtj hf hgfh
+</p>
+
+<H2 id = "head2">
+Klikk her for å  lese om Konfucius
+</H2>
+<p id = "head2p" style="display:none">
+fgfd fd fd dfg gfdt yt tryrt h vcs dtj hf hgfh
+fgfd fd fd dfg gfdt yt tryrt h vcs dtj hf hgfh
+fgfd fd fd dfg gfdt yt tryrt h vcs dtj hf hgfh
+fgfd fd fd dfg gfdt yt tryrt h vcs dtj hf hgfh
+</p>
+
+<H2 id = "innl">
+Innledning
+</H2>
+<ul id = "innlp" style = "display:none">
+<li>Bakgrunn</li>
+<li>Problemstilling</li>
+<li>Framgangsmåte</li>
+</ul>
+
+<H2 id = "toys">
+Tøys og tull
+</H2>
+<p id = "toysp" style = "display:none">
+
+<table border = "43"> 
+<tr>
+<td>Tøys</td>
+<td>Tull</td>
+</tr>
+</table>
+
+</p>
+
+</body>
+</html>

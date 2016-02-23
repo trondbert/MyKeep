@@ -1,7 +1,10 @@
 package difficult;
 
+import static java.util.Arrays.asList;
+import static org.junit.Assert.assertEquals;
+
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -13,65 +16,125 @@ public class ShuffleArrayTest {
 
     @Test
     public void testOperationRoot() throws Exception {
-        ShuffleArray.list = new ArrayList<>(Arrays.asList(1, 4, 2, 8));
-        ShuffleArray.listHead = new ListChunk(1, 4, null);
+        setupTestClass(asList(1, 4, 2, 8));
 
         ShuffleArray.performOperation(1, 2, 3);
-
     }
 
     @Test
     public void testOperationRoot2() throws Exception {
-        ShuffleArray.list = new ArrayList<>(Arrays.asList(1, 4, 2, 8, 3222, 10, 256));
-        ShuffleArray.listHead = new ListChunk(1, 7, null);
+        setupTestClass(asList(1, 4, 2, 8, 3222, 10, 256));
 
         ShuffleArray.performOperation(2, 3, 4);
 
-        final ListChunk head = ShuffleArray.listHead;
-        Assert.assertEquals(Integer.valueOf(1), head.head);
-        Assert.assertEquals(Integer.valueOf(2), head.size);
-
-        ListChunk next = ShuffleArray.listHead.next;
-        Assert.assertEquals(Integer.valueOf(5), next.head);
-        Assert.assertEquals(Integer.valueOf(3), next.size);
-
-        next = next.next;
-        Assert.assertEquals(Integer.valueOf(3), next.head);
-        Assert.assertEquals(Integer.valueOf(2), next.size);
-        Assert.assertNull(next.next);
-
-        Assert.assertTrue(head.next.next == ShuffleArray.listTail);
+        final ListChunk tail = new Asserter()
+                .head(1, 2, 5)
+                .next(5, 3, 3)
+                .next(3, 2, null).get();
+        Assert.assertTrue(tail == ShuffleArray.listTail);
     }
 
     @Test
     public void testOperationRoot2b() throws Exception {
-        ShuffleArray.list = new ArrayList<>(Arrays.asList(1, 4, 2, 8, 3222, 10, 256));
-        ShuffleArray.listHead = new ListChunk(1, 7, null);
+        setupTestClass(asList(1, 2, 3, 4));
 
-        ShuffleArray.performOperation(2, 3, 4); // 1 4 3222 10 256 2 8 (1 > 5, 5 > 3, 3 > null
-        ShuffleArray.performOperation(2, 2, 6); // 1 8 4 3222 10 256 2 (1 > 4, ...)
+        ShuffleArray.performOperation(1, 2, 3);
 
-        final ListChunk head = ShuffleArray.listHead;
-        Assert.assertEquals(Integer.valueOf(1), head.head);
-        Assert.assertEquals(Integer.valueOf(1), head.size);
+        final Asserter asserter = asserter();
+        asserter.head(2, 2, 1);
+        asserter.next(1, 1, 4);
+        assertEquals(ShuffleArray.listTail, asserter.next(4, 1, null).get());
+    }
 
-        ListChunk next1 = ShuffleArray.listHead.next;
-        Assert.assertEquals(Integer.valueOf(4), next1.head);
-        Assert.assertEquals(Integer.valueOf(1), next1.size);
+    @Test
+    public void testOperationRoot2c() throws Exception {
+        setupTestClass(asList(1, 2, 3, 4));
 
-        final ListChunk next2 = next1.next;
-        Assert.assertEquals(Integer.valueOf(2), next2.head);
-        Assert.assertEquals(Integer.valueOf(1), next2.size);
+        ShuffleArray.performOperation(2, 1, 3);
 
-        final ListChunk next3 = next2.next;
-        Assert.assertEquals(Integer.valueOf(5), next3.head);
-        Assert.assertEquals(Integer.valueOf(3), next3.size);
+        final ListChunk tail = asserter()
+                .head(4, 1, 1)
+                .next(1, 3, null).get();
+        assertEquals(ShuffleArray.listTail, tail);
+    }
 
-        final ListChunk next4 = next3.next;
-        Assert.assertEquals(Integer.valueOf(3), next4.head);
-        Assert.assertEquals(Integer.valueOf(1), next4.size);
-        Assert.assertNull(next4.next);
+    @Test
+    public void testOperationRoot1() throws Exception {
+        setupTestClass(asList(1, 2, 3, 4, 5));
 
-        Assert.assertTrue(next4 == ShuffleArray.listTail);
+        ShuffleArray.performOperation(1, 3, 4); // 3 4 1 2 5
+
+        final Asserter asserter = asserter();
+        asserter.head(3, 2, 1);
+        asserter.next(1, 2, 5);
+        final ListChunk tail = asserter.next(5, 1, null).get();
+        Assert.assertTrue(tail == ShuffleArray.listTail);
+    }
+
+    @Test
+    public void testOperationRoot1b() throws Exception {
+        setupTestClass(asList(1, 2, 3, 4, 5));
+
+        ShuffleArray.performOperation(1, 3, 4); // 3 4, 1 2, 5
+        ShuffleArray.performOperation(1, 3, 4); // 1 2, 3 4, 5
+
+        final Asserter asserter = asserter();
+        asserter.head(1, 2, 3);
+        asserter.next(3, 2, 5);
+        final ListChunk tail = asserter.next(5, 1, null).get();
+        Assert.assertTrue(tail == ShuffleArray.listTail);
+    }
+
+    @Test
+    public void testOperationRoot1c() throws Exception {
+        setupTestClass(asList(1, 2, 3, 4, 5));
+
+        ShuffleArray.performOperation(1, 3, 5); // 3 4 5, 1 2
+
+        final Asserter asserter = asserter();
+        asserter.head(3, 3, 1);
+        final ListChunk tail = asserter.next(1, 2, null).get();
+        Assert.assertTrue(tail == ShuffleArray.listTail);
+    }
+
+    private Asserter asserter() {
+        return new Asserter();
+    }
+
+    private void setupTestClass(final List<Integer> list) {
+        ShuffleArray.list = new ArrayList<>(list);
+        ShuffleArray.listHead = new ListChunk(1, list.size(), null);
+        ShuffleArray.listTail = ShuffleArray.listHead;
+    }
+}
+
+
+class Asserter {
+
+    ListChunk current;
+
+    Asserter head(Integer position, Integer size, Integer nextPosition) {
+        current = ShuffleArray.listHead;
+        assertChunk(position, size, nextPosition);
+        return this;
+    }
+
+    Asserter next(Integer position, Integer size, Integer nextPosition) {
+        current = current.next;
+        assertChunk(position, size, nextPosition);
+        return this;
+    }
+
+    ListChunk get() {
+        return current;
+    }
+
+    private void assertChunk(final Integer position, final Integer size, final Integer nextPosition) {
+        assertEquals(position, current.head);
+        assertEquals(size, current.getSize());
+        if (nextPosition != null)
+            assertEquals(nextPosition, current.next.head);
+        else
+            Assert.assertNull(current.next);
     }
 }

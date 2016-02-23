@@ -1,5 +1,12 @@
 package sample;
 
+import static java.lang.Math.*;
+import static sample.FxSettings.*;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.UnaryOperator;
+
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.paint.Color;
@@ -7,14 +14,6 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.StrokeType;
 import javafx.scene.text.Text;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static java.lang.Math.ceil;
-import static java.lang.Math.log10;
-import static java.lang.Math.pow;
-import static sample.GraphApp.*;
 
 public class GraphDrawer {
 
@@ -111,8 +110,12 @@ public class GraphDrawer {
         return circle;
     }
 
-    private Line line(double startX, double startY, double endX, double endY) {
-        Line line = new Line(adjustedX(startX), adjustedY(startY), adjustedX(endX), adjustedY(endY));
+    Line line(double startX, double startY, double endX, double endY) {
+        return rawLine(adjustedX(startX), adjustedY(startY), adjustedX(endX), adjustedY(endY));
+    }
+
+    Line rawLine(double startX, double startY, double endX, double endY) {
+        Line line = new Line(startX, startY, endX, endY);
         line.setStroke(Color.web("black", 1));
         line.setFill(Color.web("black", 1));
         line.setStrokeWidth(1);
@@ -133,5 +136,9 @@ public class GraphDrawer {
         return SCENE_X_MIN +
                 (SCENE_X_MAX - SCENE_X_MIN) *
                         ((x - xMin) / (xMax - xMin));
+    }
+
+    static <T> T transform(T operand, UnaryOperator<T> operator) {
+        return operator.apply(operand);
     }
 }

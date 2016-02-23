@@ -1,20 +1,22 @@
 package sample;
 
-import javafx.geometry.Point2D;
-
-import java.util.*;
-import java.util.List;
-import java.util.function.DoubleUnaryOperator;
-
 import static java.lang.Math.PI;
 import static java.lang.Math.pow;
+import static sample.FxSettings.*;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.function.DoubleUnaryOperator;
+
+import javafx.geometry.Point2D;
 
 public class FunctionFactory {
 
-    public List<Point2D> getFunctionPoints(Map<GraphApp.Params, Double> params) {
-        Double a = params.get(GraphApp.Params.a);
-        Double b = params.get(GraphApp.Params.b);
-        Double c = params.get(GraphApp.Params.c);
+    public List<Point2D> getFunctionPoints(final Map<String, FxParam> params) {
+        Double a = params.get("a").get();
+        Double b = params.get("b").get();
+        Double c = params.get("c").get();
 
         List<Point2D> pointsPolar = makePointsPolar(angle -> (a * Math.pow(angle, 2) + b * angle + c),
                 -2 * PI,
@@ -38,8 +40,8 @@ public class FunctionFactory {
         double last = 0;
         double functionValue = 0;
         double graphDiagonal = Math.sqrt(
-                    Math.pow(GraphApp.xMax - GraphApp.xMin, 2) +
-                    Math.pow(GraphApp.yMax - GraphApp.yMin, 2));
+                Math.pow(xMax - xMin, 2) +
+                Math.pow(yMax - yMin, 2));
         //(functionValue - last) > graphDiagonal / 2000 ? stepAngle / 12 : stepAngle
 
         for (double angle = minAngle; angle < maxAngle; ) {

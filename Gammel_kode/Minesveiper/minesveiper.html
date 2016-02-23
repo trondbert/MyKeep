@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        td.container > div { width: 100%; height: 100%; overflow:hidden; }
+        td.container { height: 17px; padding: 0; }
+    </style> 
+    <script language = "Javascript">
+    function settFlagg(event) {
+        event.preventDefault();
+        if (document.all("tabell").getAttribute("aktiv") == "false") {
+            return;
+        } 
+            
+        if (event.target.tagName == "IMG") {
+            if (event.target.getAttribute("bilde") == "flagg.gif") {
+                event.target.setAttribute("bilde", "knapp.gif");
+                event.target.src = "knapp.gif";
+                return;
+            }
+            if (event.target.getAttribute("bilde") == "knapp.gif") {
+                event.target.setAttribute("bilde", "flagg.gif");
+                event.target.src = "flagg.gif";
+            }
+        }
+    }
+
+    function opneRute(y, x, event) {
+        var k, l;
+        document.all(y+","+x).setAttribute("bilde", event.target.getAttribute("nabominer") + ".gif");
+        document.all(y+","+x).src = event.target.getAttribute("nabominer") + ".gif";
+        var tabell = document.all("tabell");
+        decreaseAttribute(tabell, "antUopna");
+    }
+
+    function settTekst(event) {
+        var tabell = document.all("tabell");
+        if (tabell.getAttribute("aktiv") == "false")
+            return;
+            
+        if(event.target.tagName!="IMG" 
+            || event.target.getAttribute("bilde") == "flagg.gif")
+            return;
+        
+        var i, j, x, y, id;
+                
+        if (event.target.getAttribute("mine") == 1) {
+            event.target.setAttribute("bilde", "bang.gif");
+            event.target.src = "bang.gif";
+            document.body.setAttribute("bgcolor", "red");
+            tabell.setAttribute("aktiv", false);
+            document.all("body").bgcolor = "red";
+            return;
+        }
+        
+        if (event.target.getAttribute("bilde") == "knapp.gif") {    
+            var y = event.target.getAttribute("y");
+            var x = event.target.getAttribute("x");
+            opneRute(y,x, event);
+        }
+        
+        if (tabell.getAttribute("antUopna") == tabell.getAttribute("antMiner"))
+            alert("Du greidde det!");
+    }
+
+    function startOver(sjekkForRestart) {
+        document.all("tabell").setAttribute("antUopna", Number(maxX) * Number(maxY));
+        document.all("tabell").setAttribute("aktiv", true);
+        document.body.removeAttribute("bgcolor");
+
+        for(i = 0; i < document.all.length; i++) {
+            if (document.all[i].tagName == "IMG") {
+                document.all[i].setAttribute("bilde",  "knapp.gif");
+                document.all[i].src = "knapp.gif";
+                document.all[i].setAttribute("nabominer", 0);
+                document.all[i].setAttribute("mine", 0);
+            }
+        }
+        for(i = 0; i < antMiner; i++) {
+            //alert(i);
+            do {
+                x = Math.round(Math.random()*maxX);
+                y = Math.round(Math.random()*maxY);
+            }
+            while (x < 1 || x > maxX || y < 1 || y > maxY || document.all(y+","+x).getAttribute("mine") == 1);
+            
+            document.all(y+","+x).setAttribute("mine", 1);
+            
+            for(k = y-1; k < y+2; k++) {
+                for(l = x-1; l < x+2; l++) {
+                    if(k < 1 || k > maxY || l < 1 || l > maxX) { }
+                    else if(document.all(k+","+l).getAttribute("mine") != 1) {
+                        increaseAttribute(document.all(k+","+l), "nabominer");
+                    }    
+                }
+            }
+        }
+        if(Number(sjekkForRestart) == 1)
+            document.all("StartPaaNytt").value = "Start på nytt med same verdiar";
+    }
+
+    function increaseAttribute(element, attributeName) {
+        var newValue = parseInt(element.getAttribute(attributeName)) + 1;
+        element.setAttribute(attributeName, newValue);
+    }
+
+    function decreaseAttribute(element, attributeName) {
+        var newValue = parseInt(element.getAttribute(attributeName)) - 1;
+        element.setAttribute(attributeName, newValue);
+    }
+
+    </script>
+</head>
+<body onClick = "settTekst(event)" onContextmenu = "settFlagg(event)">
+
+    <form id=form1 name=form1>
+
+    <table id = "tabell" border = "0">
+
+        <script>
+            var i, j, k, l, streng;
+            var x = 1, y = 1;
+            var maxX, maxY, antMiner;
+            maxX = 8; //prompt("Bredde på minefeltet?","8");
+            maxY = 8; //prompt("Høgde på minefeltet?","8");
+            antMiner = 10; //prompt("Antall miner(max: "
+                            //    + Number(maxX) * Number(maxY) + ")?","10");
+
+            document.all("tabell").antMiner = antMiner;
+
+            for(i = 1; i <= Number(maxY); i++) {
+                document.write("<tr>");
+                for(j = 1; j <= maxX; j++) {
+                    document.write("<td class='container'><div><img id = '" + i + "," + j + "'/></div></td>");
+                    document.all(i+","+j).setAttribute("x", j);
+                    document.all(i+","+j).setAttribute("y", i);
+                    document.all(i+","+j).readOnly = true;        
+                }    
+                document.write("</tr>");    
+            }
+
+            startOver(0);
+        </script>
+    </table>
+    <br>
+    <input type = "button" onClick = "startOver(1)" id = "StartPaaNytt"
+    value = "Start på nytt med same verdiar">
+    </form>
+
+</body>
+</html>

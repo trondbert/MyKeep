@@ -1,0 +1,23 @@
+<html>
+<head>
+<script language="JavaScript">
+<!--
+expireAt = new Date;
+expireAt.setMonth(expireAt.getMonth()+3);
+username="";
+
+function makeCookie()
+{
+username = document.form1.user1.value;
+document.cookie+="name="+username+";expires="+expireAt.toGMTString();
+}
+-->
+</script>
+</head>
+<body>
+<form name = "form1">
+<p>Username: <input type = "text" name = "user1"><br>
+<a href = "side2.html" onClick = "makeCookie()">continue...</a></p>
+</form>
+</body>
+</html>

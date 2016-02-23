@@ -1,0 +1,19 @@
+<html>
+<head>
+<script language = "JavaScript">
+<!--
+var tekst = "Velkomen til denne supre sida!                                      ";
+var lengde = tekst.length;
+function rullendeStatus()
+{
+window.status = tekst;
+tekst = tekst.substring(lengde-1,lengde)+tekst.substring(0,lengde-1);
+setTimeout("rullendeStatus()",50);
+}
+-->
+</script>
+</head>
+<body onload="rullendeStatus()">
+
+</body>
+</html>

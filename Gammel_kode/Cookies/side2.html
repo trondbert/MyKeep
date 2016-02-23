@@ -1,0 +1,38 @@
+<html>
+<head>
+<script language="JavaScript">
+<!--
+
+crumbs = document.cookie.split(";");
+alert(crumbs.length);
+for(i=0;i<crumbs.length;i++)
+{
+	alert(crumbs[i].split("=")[1]);
+}
+
+
+function fillIn()
+{
+if(document.cookie != "")
+{
+	cookieCrumb = document.cookie.split("=")[1];
+	document.form1.read1.value = cookieCrumb;
+}
+else
+	document.form1.read1.value = "Cookie empty!";
+}
+-->
+</script>
+</head>
+<body onload = "fillIn()">
+<form name = "form1">
+<p>The username you entered was:
+<input type = "text" name = "read1"><br>
+</p>
+</form>
+
+<script>
+document.write(document.cookie);
+</script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<html>
+<head>
+
+<script language = "JavaScript">
+<!--
+
+function hentTid()
+{
+
+var dato = new Date();
+var ma = Number(dato.getMonth()) + 1;
+var d = dato.getDate();
+var t = dato.getHours();
+var m = dato.getMinutes();
+var s = dato.getSeconds();
+
+
+if(ma < 10)
+	ma = "0"+ma;
+if(d < 10)
+	d = "0"+d;
+if(t < 10)
+	t = "0"+t;
+if(m < 10)
+	m = "0"+m;
+if(s < 10)
+	s = "0"+s;
+
+document.klokkeskjema.klokke.value = d+"."+ma+" "+t+":"+m+":"+s;
+setTimeout("hentTid()",100);
+}
+-->
+</script>
+</head>
+<body onload = "hentTid()">
+
+<form name = "klokkeskjema">
+<input type = "text" name = "klokke">
+</form>
+
+</body>
+</html>

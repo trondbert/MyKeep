@@ -1,5 +1,20 @@
 package sample;
 
+import static java.lang.Math.*;
+import static java.lang.String.format;
+import static sample.FxParam.param;
+import static sample.FxParam.params;
+import static sample.FxSettings.*;
+
+import java.text.DecimalFormat;
+import java.text.MessageFormat;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.function.DoubleUnaryOperator;
+import java.util.function.Function;
+
 import javafx.application.Application;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
@@ -9,75 +24,32 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
-import java.text.DecimalFormat;
-import java.text.MessageFormat;
-import java.util.*;
-import java.util.function.*;
-
-import static java.lang.Math.*;
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
-import static sample.GraphApp.Params.*;
-
 public class GraphApp extends Application {
 
-    static final int SCENE_WIDTH = 1200;
-    static final int SCENE_HEIGHT = 900;
+    private static Map<Object, Text> textMap = new HashMap<>();
 
-    static final DecimalFormat floatFormat = new DecimalFormat("##.###");
-
-    static double xMax = 4;
-    static double xMin = -4;
-    static double yMax = 4;
-    static double yMin = -4;
-
-    static double SCENE_X_MIN = 0;
-    static double SCENE_X_MAX = SCENE_WIDTH;
-    //Flippet Y-akse, vi regner utifra vanlig koordinatsystem, der y øker oppover
-    static double SCENE_Y_MIN = SCENE_HEIGHT;
-    static double SCENE_Y_MAX = 0;
-
-    private static Map<Enum, Text> textMap = new HashMap<>();
-
-    private static Map<Params, Double> functionParams = new TreeMap<>();
+    private static Map<FxParam, Double> functionParams = new TreeMap<>();
     private GraphDrawer graphDrawer = new GraphDrawer();
-    private Params controlledParameter;
+    private FxParam controlledParameter;
 
-    enum Params {
-        a(val -> val + angleStep(), val -> val - angleStep()),
-        b(val -> val + angleStep(), val -> val - angleStep()),
-        c(val -> val + angleStep(), val -> val - angleStep()),
-        s(val -> val * 10, val -> val / 10);
-
-        final DoubleUnaryOperator increase;
-        final DoubleUnaryOperator decrease;
-
-        Params(DoubleUnaryOperator increase, DoubleUnaryOperator decrease ) {
-            this.increase = increase;
-            this.decrease = decrease;
-        }
-    }
-
-    enum NodeID {ANGLE, X_Y}
-
-    private static double angleStep() {
-        return functionParams.get(Params.s);
-    }
+    enum NodeID { ANGLE, X_Y }
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        functionParams.put(a, 1.0);
-        functionParams.put(b, 1.0);
-        functionParams.put(c, 1.0);
-        functionParams.put(s, 0.1);
-        controlledParameter = functionParams.keySet().iterator().next();
+        floatFormat = new DecimalFormat("##.###");
+        FxSettings.xMax = 4;
+        FxSettings.xMin = -4;
+        FxSettings.yMax = 4;
+        FxSettings.yMin = -4;
+
+        controlledParameter = params().stream().findFirst().get();
 
         textMap.put(NodeID.ANGLE, new Text(5, 15, "Angle (rad): "));
         textMap.put(NodeID.X_Y, new Text(5, 50, "(x,y): "));
-        textMap.put(a, new Text(5, 70, "a: " + floatFormat.format(functionParams.get(a))));
-        textMap.put(b, new Text(5, 90, "b: " + floatFormat.format(functionParams.get(b))));
-        textMap.put(c, new Text(5, 110, "c: " + floatFormat.format(functionParams.get(c))));
-        textMap.put(s, new Text(5, 130, "step: " + floatFormat.format(functionParams.get(s))));
+        textMap.put("a", new Text(5,  70, "a: "    + floatFormat.format(param("a").get())));
+        textMap.put("b", new Text(5,  90, "b: "    + floatFormat.format(param("b").get())));
+        textMap.put("c", new Text(5, 110, "c: "    + floatFormat.format(param("c").get())));
+        textMap.put("s", new Text(5, 130, "step: " + floatFormat.format(param("s").get())));
 
         Group root = new Group();
         root.getChildren().addAll(textMap.values());
@@ -119,21 +91,19 @@ public class GraphApp extends Application {
 
     void setupOnKeyPressed(Scene scene) {
         scene.setOnKeyPressed(event -> {
-            Function<String, Boolean> paramExists = (paramName ->
-                    asList(Params.values()).stream().anyMatch(val -> val.name().equals(paramName)));
-
-            if (event.getText() != null && paramExists.apply(event.getText())) {
-                controlledParameter = Params.valueOf(event.getText());
-                return;
+            if (event.getText() != null) {
+                final FxParam param = FxParam.param(event.getText());
+                if (param != null) {
+                    controlledParameter = param;
+                    return;
+                }
             }
-
-            Function<Void, String> fds  = val -> "";
 
             DoubleUnaryOperator changeParam =
                 ((Function<KeyCode, DoubleUnaryOperator>) (eventCode -> {
                     switch (eventCode) {
-                        case UP:    return controlledParameter.increase;
                         case DOWN:  return controlledParameter.decrease;
+                        case UP:    return controlledParameter.increase;
                         default:    return null;
                     }
                 })).apply(event.getCode());
@@ -163,7 +133,7 @@ public class GraphApp extends Application {
 
         root.getChildren().removeAll(graphDrawer.nodes);
 
-        List<Point2D> mathPoints = new FunctionFactory().getFunctionPoints(functionParams);
+        List<Point2D> mathPoints = new FunctionFactory().getFunctionPoints(FxParam.instances);
         graphDrawer.redraw(mathPoints);
         root.getChildren().addAll(graphDrawer.nodes);
     }
@@ -183,8 +153,5 @@ public class GraphApp extends Application {
     public static void main(String[] args) {
         launch(args);
     }
-
-    static <T> T transform(T operand, UnaryOperator<T> operator) {
-        return operator.apply(operand);
-    }
 }
+

@@ -1,48 +1,20 @@
 package trond.java;
 
-import static java.lang.String.format;
+import static java.lang.Math.max;
 import static java.lang.System.out;
+import static java.util.stream.Collectors.*;
 
-import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @SuppressWarnings("checkstyle") public class MagiskKvadrat2 {
 
-    private static boolean debug = true;
-
-    private static final int MILLIS_PER_SECOND = 1000;
-
-    private static final int MILLIS_PER_MINUTE = 60000;
-
-    private static final int MILLIS_PER_HOUR = 3600000;
-
-    private static final int MILLIS_PER_24H = 86400000;
-
-    private static final int squareSize = 4;
-
-    private static final int numberBase = 10;
-
-    private final Integer[][] digitSums = new Integer[squareSize + 1][squareSize];
-
-    {
-        {
-            for (int i = 0; i < squareSize + 1; i++) {
-                digitSums[i] = new Integer[squareSize];
-                for (int j = 0; j < squareSize; j++) { digitSums[i][j] = 0;}
-            }
-        }
-    }
-
-    private Map<Integer, Set<Integer[][]>> rowColCombsPerSum;
-
-    private final static StopWatch stopWatchCombinations = new StopWatch();
-
-    private final DebugChecker debugChecker = new DebugChecker();
-
-    /**
-     * Last sum before the sum combinations repeat themselves reversed (0->1, 1->3, 2->5, 3->3, 4->1).
-     */
-    private final int middleSum = (squareSize * (numberBase - 1)) / 2;
+    private static final Integer[][] digitSums = new Integer[4 + 1][4];
 
     /**
      * Runs the show.
@@ -50,173 +22,131 @@ import java.util.*;
      * @param args They are ignored.
      */
     public static void main(final String[] args) {
-        final long timeBefore = System.currentTimeMillis();
-        final StopWatch stopWatchMain = new StopWatch();
-        stopWatchMain.start();
+        final List<List<Integer>> cellList = Stream.iterate(0, (x) -> x + 1).limit(4).collect(
+                mapping((num) -> new ArrayList<Integer>() {{ add(num); }}, toList()));
 
-        new MagiskKvadrat2().solve();
+        final Function<List<List<Integer>>, List<List<Integer>>> fleshOut = MagiskKvadrat2::fleshOut;
+        final List<List<Integer>> fullList = fleshOut.andThen(fleshOut).andThen(fleshOut).apply(cellList);
 
-        stopWatchMain.stop();
-        System.out.println("Time total: " + stopWatchMain.getTimeSpent());
-        System.out.println("Time combs: " + stopWatchCombinations.getTimeSpent());
+        final List<Integer> possibleRow = Arrays.asList(4, 5, 6, 8);
+        final int sumPossibleRow = possibleRow.stream().reduce((x, y) -> x + y).get();
 
-        final long timeElapsed = System.currentTimeMillis() - timeBefore;
-        final long seconds = (timeElapsed % MILLIS_PER_MINUTE) / MILLIS_PER_SECOND;
-        final long minutes = (timeElapsed % MILLIS_PER_HOUR) / MILLIS_PER_MINUTE;
-        final long hours = (timeElapsed % MILLIS_PER_24H) / MILLIS_PER_HOUR;
+        final List<List<Integer>> possibleRows =
+                fullList.stream().filter(list -> {return list.stream().reduce(0, (x, y) -> x + y) == 4;})
+                        .map(contributions -> {
+                            return Stream.iterate(0, x-> x + 1).limit(contributions.size())
+                                         .map(i -> possibleRow.get(i) * contributions.get(i))
+                                         .collect(toList());
+                             }
+                        ).filter( row -> row.stream().reduce(0, (x,y) -> x+y) == sumPossibleRow)
+                        .collect(toList());
 
-        out.println("... in " + hours + "h, " + minutes + "m and " + seconds + "s");
+        possibleRows.stream().map(cells ->
+            IntStream.range(0,4).flatMap(i ->
+                    IntStream.generate( ()-> possibleRow.get(i)).limit(cells.get(i) / possibleRow.get(i)))
+                    .mapToObj(String::valueOf)
+                     .collect(Collectors.joining(" "))
+        ).forEach(System.out::println);
+
+        final int maxCellValue = 8;
+
+        final int[] cells = { 1, 2, 3, 4 };
+        do {
+            final List<int[]> permutations = permutations(cells);
+            out.print(" " + magicSquaresCount(permutations));
+            out.println(" " + IntStream.of(cells).mapToObj(String::valueOf).collect(joining(" ")));
+        } while (increaseCellValues(cells, maxCellValue));
+
+        final List<int[]> permutations = permutations(new int[] { 1, 2, 3, 4 });
+        final List<int[]> permutations2 = permutations(new int[] { 2, 4, 6, 8 });
+        out.println("");
     }
 
-    private void solve() {
-        try {
-            new Thread(debugChecker).start();
-            final Map<Integer, Long> sumMap = equalSums2();
-
-            out.println("Result:");
-            sumMap.entrySet().stream().filter(it -> it.getValue() > 0L)
-                  .forEach(entry -> out.println(format("%1$3d: %2$5d", entry.getKey(), entry.getValue())));
-
-            final long doubled = sumMap.values().stream().reduce(Math::addExact).get() * 2;
-            out.println(doubled - sumMap.get(middleSum)); //Middle sum counted twice
-        }
-        finally {
-            debugChecker.runForrest = false;
-        }
-    }
-
-    /**
-     * All combinations of ciphers that add up to the given sum.
-     *
-     * @param sum The given sum.
-     * @return Ditto
-     */
-    private List<int[]> combinations(final int sum) {
-        stopWatchCombinations.start();
-        final List<int[]> list = new ArrayList<>();
-        final int maxCombination = Math.min(sum * 1_000 + 1_000, 10_000);
-        for (int i = 0; i < maxCombination; i++) {
-            if ((i / 1000) >= numberBase || (i % 1000 / 100) >= numberBase ||
-                (i % 100 / 10) >= numberBase || (i % 10) >= numberBase) {
-                continue;
-            }
-            if ((i / 1000) + (i % 1000 / 100) + (i % 100 / 10) + (i % 10) == sum) {
-                list.add(new int[] { (i / 1000), (i % 1000 / 100), (i % 100 / 10), (i % 10) });
-            }
-        }
-        stopWatchCombinations.stop();
-        return list;
-    }
-
-    /**
-     * Map of combinations counts per square sum.
-     *
-     * @return Ditto
-     */
-    private Map<Integer, Long> equalSums2() {
-        final HashMap<Integer, Long> result = new HashMap<>();
-        result.put(1, findOneSumBoards());
-        for (int sum = 0; sum <= middleSum; sum++) {
-            final long numberOfEqualSumBoards = result.put(sum, equalSumBoards(sum));
-        }
-        return result;
-    }
-
-    private Long equalSumBoards(int sum) {
-        for (Integer[][] integerLast : rowColCombsPerSum.get(sum - 1)) {
-            for (Integer[][] integerDiff : rowColCombsPerSum.get(1)) {
-                for (int row = 0; row < 4; row++) {
-                    int rowSum = 0;
-                    for (int col = 0; col < 4; col++) {
-                        rowSum += integerLast[row][col] + integerDiff[row][col];
-                    }
-
-                    int colSum = 0;
-                    for (int col = 0; col < 4; col++) {
-                        rowSum += integerLast[row][col] + integerDiff[row][col];
-                    }
-
-                }
-            }
-        }
-        return 0L;
-    }
-
-    private long findOneSumBoards() {
-        final List<int[]> combinationsForSum = combinations(1);
-        final Integer[][] combinations = new Integer[combinationsForSum.size()][squareSize];
-        combinationsForSum.toArray(combinations);
-
+    private static int magicSquaresCount(final List<int[]> possibleRows) {
         digitSums[0] = new Integer[] { 0, 0, 0, 0 };
-        long numberOfEqualSumBoards = 0L;
-        Integer[] row1;
-        Integer[] row2;
-        Integer[] row3;
-        Integer[] row4;
+        int numberOfEqualSumBoards = 0;
+        int[] row1;
+        int[] row2;
+        int[] row3;
+        int[] row4;
 
-        for (final Integer[] combination1 : combinations) {
+        final int[] row = possibleRows.get(0);
+        final int sum = row[0] + row[1] + row[2] + row[3];
+
+        for (final int[] combination1 : possibleRows) {
             row1 = combination1;
-            if (!advanceDigitSums(row1, 1, 1)) {
+            if (!advanceDigitSums(row1, sum, 1)) {
                 continue;
             }
-            for (final Integer[] combination2 : combinations) {
+            for (final int[] combination2 : possibleRows) {
                 row2 = combination2;
-                if (!advanceDigitSums(row2, 1, 2)) {
+                if (!advanceDigitSums(row2, sum, 2)) {
                     continue;
                 }
-                for (final Integer[] combination3 : combinations) {
+                for (final int[] combination3 : possibleRows) {
                     row3 = combination3;
-                    if (!advanceDigitSums(row3, 1, 3)) {
+                    if (!advanceDigitSums(row3, sum, 3)) {
                         continue;
                     }
-                    row4 = calculateLastRow(1);
-
-                    if (rowOkCombination(row4, 1)) {
-                        addMatch(1, row1, row2, row3, row4);
-                        if (diagonalsEqual(1, row1, row2, row3, row4)) {
+                    for (final int[] combination4 : possibleRows) {
+                        row4 = combination4;
+                        if (!advanceDigitSums(row4, sum, 4)) {
+                            continue;
+                        }
+                        if (rowOkCombination(row4, sum) && diagonalsEqual(sum, row1, row2, row3, row4)) {
+                            //debugComb(numberOfEqualSumBoards, row1, row2, row3, row4, sum, cellsTemp);
                             numberOfEqualSumBoards++;
                         }
                     }
                 }
             }
         }
-        System.out.println();
         return numberOfEqualSumBoards;
     }
 
-    private void addMatch(int sum, Integer[] row1, Integer[] row2, Integer[] row3, Integer[] row4) {
-        Set<Integer[][]> integers = rowColCombsPerSum.get(sum);
-        if (integers == null)
-            rowColCombsPerSum.put(sum, new TreeSet<>());
-
-        rowColCombsPerSum.get(sum).add(new Integer[][] { row1, row2, row3, row4 });
+    private static void debugComb(int numberOfEqualSumBoards, final int[] row1, final int[] row2, final int[] row3,
+                                  final int[] row4, final int sum, final ArrayList<Integer> cellsTemp) {
+        if (cellsTemp.containsAll(Arrays.asList(1, 2, 3, 4))) {
+            out.print(IntStream.of(row1).map(e -> e * 2).mapToObj(String::valueOf).collect(joining(" ")) + " ");
+            out.print(IntStream.of(row2).map(e -> e * 2).mapToObj(String::valueOf).collect(joining(" ")) + " ");
+            out.print(IntStream.of(row3).map(e -> e * 2).mapToObj(String::valueOf).collect(joining(" ")) + " ");
+            out.println(IntStream.of(row4).map(e -> e * 2).mapToObj(String::valueOf).collect(joining(" ")) + " ");
+        }
+        else if (cellsTemp.containsAll(Arrays.asList(2, 4, 6, 8))) {
+            out.print(IntStream.of(row1).mapToObj(String::valueOf).collect(joining(" ")) + " ");
+            out.print(IntStream.of(row2).mapToObj(String::valueOf).collect(joining(" ")) + " ");
+            out.print(IntStream.of(row3).mapToObj(String::valueOf).collect(joining(" ")) + " ");
+            out.println(IntStream.of(row4).mapToObj(String::valueOf).collect(joining(" ")) + " ");
+        }
     }
 
-    private boolean rowOkCombination(final Integer[] row, final int sum) {
-        int sumRow = 0;
-        for (Integer number : row) {
-            sumRow += number;
-        }
-        if (sumRow != sum)
+    private static boolean rowOkCombination(final int[] row, final int sum) {
+        final int sumLastRow = IntStream.of(row).reduce(Math::addExact).getAsInt();
+        if (sumLastRow != sum)
             return false;
         for (final int number : row) {
-            if (number >= numberBase) {
+            if (number >= 10) {
                 return false;
             }
         }
         return true;
     }
 
-    private Integer[] calculateLastRow(final int sum) {
-        final Integer[] integers = new Integer[4];
+    static List<List<Integer>> fleshOut(final List<List<Integer>> list) {
+        return list.stream().flatMap((simpleList) -> Stream.iterate(0, (x) -> x + 1).limit(4)
+                                                           .map(num -> new ArrayList<Integer>(simpleList) {{ add(num); }}))
+                   .collect(toList());
+    }
+
+    private static int[] calculateLastRow(final int sum) {
+        final int[] integers = new int[4];
         for (int i = 0; i < 4; i++) {
             integers[i] = sum - digitSums[3][i];
         }
         return integers;
     }
 
-    private boolean diagonalsEqual(final int sum, final Integer[] row1, final Integer[] row2, final Integer[] row3,
-                                   final Integer[] row4) {
+    private static boolean diagonalsEqual(final int sum, final int[] row1, final int[] row2, final int[] row3, final int[] row4) {
         final int diagSum1 = row1[0] + row2[1] + row3[2] + row4[3];
         if (diagSum1 != sum)
             return false;
@@ -231,73 +161,59 @@ import java.util.*;
      * @param sum desired square sum
      * @return true if updated, otherwise false.
      */
-    private boolean advanceDigitSums(final Integer[] row, final int sum, final int rowIndex) {
-        final int[] sums = new int[squareSize];
-        for (int i = 0; i < squareSize; i++) {
+    private static boolean advanceDigitSums(final int[] row, final int sum, final int rowIndex) {
+        final int[] sums = new int[4];
+        for (int i = 0; i < 4; i++) {
             sums[i] = digitSums[rowIndex - 1][i] + row[i];
             if (sums[i] > sum) {
                 return false;
             }
         }
-        for (int i = 0; i < squareSize; i++) {
+        for (int i = 0; i < 4; i++) {
             digitSums[rowIndex][i] = sums[i];
         }
         return true;
     }
 
-    @SuppressWarnings("unused")
-    void printBoard(final int[][] board) {
-        debug("|");
-        for (int i = 0; i < squareSize; i++) {
-            for (int j = 0; j < squareSize; j++) {
-                debug(board[i][j]);
+    private static List<int[]> permutations(final int[] cells) {
+        final ArrayList<int[]> permutations = new ArrayList<>();
+
+        for (int i = 0; i <= 3210; i++) {
+            final int cell1 = i / 1000;
+            final int cell2 = i % 1000 / 100;
+            final int cell3 = i % 100 / 10;
+            final int cell4 = i % 10;
+
+            if (max(max(max(cell1, cell2), cell3), cell4) <= 3 &&
+                cell1 != cell2 && cell1 != cell3 && cell1 != cell4 &&
+                cell2 != cell3 && cell2 != cell4 &&
+                cell3 != cell4) {
+                final int[] permutation = new int[4];
+                permutation[0] = cells[cell1];
+                permutation[1] = cells[cell2];
+                permutation[2] = cells[cell3];
+                permutation[3] = cells[cell4];
+
+                permutations.add(permutation);
             }
         }
-        debugln();
+        return permutations;
     }
 
-    int compareIntegerArrays(final Integer[][] a, final Integer[][] b) {
-        for (int outerIndex = 0; outerIndex < a.length; outerIndex++) {
-            for (int innerIndex = 0; innerIndex < a[0].length; innerIndex++) {
-                if (a[outerIndex][innerIndex] != b[outerIndex][innerIndex]) {
-                    return a[outerIndex][innerIndex] - b[outerIndex][innerIndex];
+    private static boolean increaseCellValues(final int[] cells, final int maxCellValue) {
+        for (int i = 3; i >= 0; i--) {
+            cells[i] = max(cells[i] + 1, cells[0] + i);
+            if (cells[i] <= maxCellValue - (3 - i)) {
+                for (int j = i + 1; j < 4; j++) {
+                    cells[j] = cells[j - 1] + 1;
                 }
+                break;
+            }
+            if (i == 0) {
+                return false;
             }
         }
-        return 0;
-    }
-
-    private void debugln() {
-        if (debug)
-            out.println();
-    }
-
-    @SuppressWarnings("unused")
-    private void debugln(final Object s) {
-        if (debug)
-            out.println(s);
-    }
-
-    private void debug(final Object s) {
-        if (debug)
-            out.print(s);
-    }
-
-    class DebugChecker implements Runnable {
-
-        public boolean runForrest = true;
-
-        @Override
-        public void run() {
-            while (runForrest) {
-                MagiskKvadrat2.debug = new File("./debug.flag").exists();
-                try {
-                    Thread.sleep(5000);
-                }
-                catch (final InterruptedException ignored) {
-                }
-            }
-        }
+        return true;
     }
 
 }
