@@ -1,3 +1,4 @@
+import java.util.function.Function;
 
 class Averager {
     private int total = 0;
@@ -12,6 +13,8 @@ class Averager {
     public void combine(Averager other) {
         total += other.total;
         count += other.count;
+
+        Function<String, String> foo = (s) -> s;
     }
 
 }

@@ -22,7 +22,7 @@ public class Duplicates {
     static Predicate<Path> doesNotExist;
 
     public static void main(final String[] args) throws Exception {
-        getAllFilesRecursively(Paths.get("/Users/trond/Documents/Bilder_alle/"),
+        getAllFilesRecursively(Paths.get("/Volumes/MY PASSPORT/Filmklipp_alle/"),
                                (allFiles = new ArrayList<>()));
         isDuplicate = file -> {
             final Stream<Path> equalFiles = allFiles.stream().filter((f) -> areEqual(file, f));
@@ -39,7 +39,7 @@ public class Duplicates {
 
         final List<Path> result = new ArrayList<>();
         wrap(() -> {
-            findMatches(Paths.get("/Users/trond/Documents/Bilder_alle/Trond/").toString(), isDuplicate);
+            findMatches(Paths.get("/Volumes/MY PASSPORT/Dans/Balboa/StudioHop 2015/Disk 1").toString(), doesNotExist);
         });
 
         //findAllDups();

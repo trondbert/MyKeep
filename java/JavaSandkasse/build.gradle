@@ -3,15 +3,16 @@ apply plugin: 'java'
 compileJava.sourceCompatibility = '1.8'
 
 
-repositories { mavenCentral() }
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
 
 dependencies {
     compile 'org.hsqldb:hsqldb:2.3.2'
     compile 'org.hibernate:hibernate-core:4.3.7.Final'
-    compile 'com.oracle:ojdbc7:12.1.0.1'
+    compile 'com.oracle:ojdbc7:12.1.0.1.0'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.8.3'
     testCompile 'junit:junit:4.11'
     testCompile 'org.easytesting:fest-assert:1.4'
-
-    
 }
-

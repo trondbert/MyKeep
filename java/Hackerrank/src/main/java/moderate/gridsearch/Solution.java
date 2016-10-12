@@ -2,7 +2,7 @@ package moderate.gridsearch;
 
 import static java.lang.String.format;
 
-import java.io.StringReader;
+import java.io.*;
 import java.util.*;
 
 /**
@@ -17,8 +17,6 @@ public class Solution {
                                 "2 2\n" +
                                 "26\n" +
                                 "72\n";
-
-    private boolean DEBUG = false;
 
     public static void main(final String[] args) {
         final Solution solution = new Solution();
@@ -35,6 +33,16 @@ public class Solution {
         }
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    Scanner getScanner(final InputStream input) throws IOException {
+        final byte[] data = new byte[10000000];
+        input.read(data);
+        input.close();
+
+        final String str = new String(data, "UTF-8");
+        return new Scanner(new StringReader(str));
+    }
+
     List<Task> readTasks(final Scanner scanner) {
         final int caseCount = scanner.nextInt(); scanner.nextLine();
         final List<Task> tasks = new ArrayList<>();
@@ -44,16 +52,16 @@ public class Solution {
             task.rows = scanner.nextInt();
             task.cols = scanner.nextInt(); scanner.nextLine();
 
-            task.array = new String[task.rows][task.cols];
+            task.lines = new String[task.rows];
             for (int row = 0; row < task.rows; row++) {
-                task.array[row] = scanner.nextLine().split("");
+                task.lines[row] = scanner.nextLine();
             }
             task.patternRows = scanner.nextInt();
             task.patternCols = scanner.nextInt(); scanner.nextLine();
 
-            task.pattern = new String[task.patternRows][task.patternCols];
+            task.pattern = new String[task.patternRows];
             for (int i = 0; i < task.patternRows; i++) {
-                task.pattern[i] = scanner.nextLine().split("");
+                task.pattern[i] = scanner.nextLine();
             }
             tasks.add(task);
         }
@@ -61,46 +69,44 @@ public class Solution {
     }
 
     String solve(final Task task) {
+        final int lastColForHitStart = task.cols - task.patternCols;
         final int startCol = 0;
+        final char patternStart = task.pattern[0].charAt(0);
         List<Hit> nextHits;
         final List<Hit> hits = new ArrayList<>();
+        boolean hitsOnRowPossible = true;
         for (int row = 0; row < task.rows; row++) {
+            hitsOnRowPossible &= row + task.patternRows <= task.rows;
+            if (!hitsOnRowPossible && hits.isEmpty())
+                break;
             nextHits = new ArrayList<>();
             for (int col = startCol; col < task.cols; col++) {
-                if (task.array[row][col].equals(task.pattern[0][0])) {
-                    hits.add(new Hit(col, 1, 0));
-                }
-
+                final char currentDigit = task.lines[row].charAt(col);;
                 final List<Hit> toRemove = new ArrayList<>();
                 for (final Hit hit : hits) {
-                    if (col != hit.startCol + hit.count)
-                        continue;
-                    debugLn(format("task.array[%d][%d].equals(task.pattern[%d][%d])",
-                                   row, col, hit.patternRow, hit.count));
-
-                    if (task.array[row][col].equals(task.pattern[hit.patternRow][hit.count])) {
+                    if (col != hit.startCol + hit.count) continue;
+                    if (currentDigit == task.pattern[hit.patternRow].charAt(hit.count)) {
                         hit.count++;
                         if (hit.count == task.patternCols) {
-                            toRemove.add(hit);
-                            final Hit newHit = new Hit(hit.startCol, 0, hit.patternRow + 1);
-                            nextHits.add(newHit);
-                            if (newHit.patternRow == task.patternRows)
+                            if (hit.patternRow + 1 == task.patternRows)
                                 return "YES";
+                            toRemove.add(hit);
+                            nextHits.add(new Hit(hit.startCol, 0, hit.patternRow + 1));
                         }
+                        continue;
                     }
+                    toRemove.add(hit);
                 }
                 toRemove.forEach(hits::remove);
+                if (hitsOnRowPossible && col <= lastColForHitStart
+                    && (currentDigit == patternStart)) {
+                    hits.add(new Hit(col, 1, 0));
+                }
             }
             hits.clear();
             hits.addAll(nextHits);
         }
         return "NO";
-    }
-
-    private void debugLn(final String msg) {
-        if (DEBUG) {
-            System.out.println(msg);
-        }
     }
 }
 
@@ -120,13 +126,6 @@ class Task {
     public int cols;
     public int patternRows;
     public int patternCols;
-    public String[][] array;
-    public String[][] pattern;
-}
-
-class Tester {
-
-    public static void foo() {
-        System.out.println("");
-    }
+    public String[] lines;
+    public String[] pattern;
 }

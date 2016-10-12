@@ -1,0 +1,42 @@
+{
+  "title": "data.norge.no",
+  "homepage": "http://data.norge.no/",
+  "datasets": [
+    {
+      "id": "http://data.norge.no/node/1737",
+      "title": "Vinterberedskap Stavanger",
+      "description": [
+        {
+          "language": "nb",
+          "value": "<p>Dette datasettet viser prioriteringen av ulike gater i Stavanger kommune. Vinterberedskapen i Stavanger kommune er inndelt som prioritert 1 og 2, avhengig av viktigheten av arbeidet.</p>"
+        }
+      ],
+      "landingPage": null,
+      "issued": "2016-09-12",
+      "modified": "2016-09-12T12:31",
+      "language": [
+        "NOR"
+      ],
+      "publisher": {
+        "name": "Stavanger kommune",
+        "mbox": "opendata@stavanger.kommune.no"
+      },
+      "keyword": [
+        "Forvaltning og offentlig sektor",
+        "Regioner og byer",
+        "Transport"
+      ],
+      "distribution": [
+        {
+          "title": "geoJSON",
+          "description": null,
+          "format": "geoJSON",
+          "downloadURL": null,
+          "accessURL": "http://open.stavanger.kommune.no/dataset/vinterberedskap-stavanger",
+          "webserviceURL": null,
+          "license": "http://data.norge.no/nlod/"
+        }
+      ]
+    }
+  ]
+}
