@@ -1,8 +1,11 @@
 .DS_Store
-.idea/
+**/.idea/
 out
 build
 .gradle
-*.iml
+**/*.iml
 bin/
 clojure/lib/*.jar
+**/target/
+assembly/basics2
+assembly/basics1
