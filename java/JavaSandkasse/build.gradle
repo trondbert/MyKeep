@@ -13,6 +13,9 @@ dependencies {
     compile 'org.hibernate:hibernate-core:4.3.7.Final'
     compile 'com.oracle:ojdbc7:12.1.0.1.0'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.8.3'
+    compile 'org.apache.james:apache-mime4j-mbox-iterator:0.8.0'
+    compile 'org.apache.james:apache-mime4j-dom:0.8.0'
+
     testCompile 'junit:junit:4.11'
     testCompile 'org.easytesting:fest-assert:1.4'
 }
