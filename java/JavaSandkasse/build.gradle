@@ -1,4 +1,5 @@
 apply plugin: 'java'
+apply plugin: 'idea'
 
 compileJava.sourceCompatibility = '1.8'
 
@@ -15,6 +16,7 @@ dependencies {
     compile 'com.fasterxml.jackson.core:jackson-databind:2.8.3'
     compile 'org.apache.james:apache-mime4j-mbox-iterator:0.8.0'
     compile 'org.apache.james:apache-mime4j-dom:0.8.0'
+    compile 'org.postgresql:postgresql:9.4.1212'
 
     testCompile 'junit:junit:4.11'
     testCompile 'org.easytesting:fest-assert:1.4'

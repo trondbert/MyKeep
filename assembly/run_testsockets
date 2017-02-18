@@ -1,0 +1,11 @@
+#!/bin/sh
+
+rm -f bin/testsockets.o
+rm -f bin/testsockets
+
+/usr/local/bin/nasm -f macho64 testsockets.asm    -o bin/testsockets.o &&
+/usr/local/bin/nasm -f macho64 printing.asm -o bin/printing.o &&
+
+ld bin/testsockets.o bin/printing.o bin/numbers.o -lc -arch x86_64 -macosx_version_min 10.7.0 -no_pie -lSystem -o bin/testsockets &&
+
+bin/testsockets $1 $2 $3
