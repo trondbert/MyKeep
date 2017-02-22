@@ -4,6 +4,7 @@ global mod
 global sqrt
 global str_to_int
 
+extern print_raw
 extern print_bytes
 extern print_ln
 extern print_num
@@ -12,79 +13,66 @@ extern print_num_ln
 section .text
 
 int_to_str: ; rdi holder tallet, rsi peker til område det skal skrives til (min 64 bit), 
-			; rdx er ønsket antall siffer (paddes med '0' på venstre side)
-	jmp 	int_to_str_push
-	int_to_str_pushed:
-	mov 	r14, rdi ; tallet som vi skal lage en string for (base 10)
-	mov 	r15, rsi ; hvor strengen skal plasseres
-	mov 	r14, rdx ; antall tegn vi skal padde ut til
-	zeros_to_desired_width:
-	mov 	r15, 0x3030303030303030
-	push 	r15
-	mov 	rdi, r15
-	mov 	rsi, rsp
-	mov 	rcx, r14
-	rep 	movsb
-	pop 	r15
+			; rcx er ønsket antall siffer (paddes med '0' på venstre side)
 
-	mov 	r13, 10	; r13 er tierpotens som skal ganges med ti til input-tallet er mindre
+	mov 	r13, rdi ; tallet som vi skal lage en string for (base 10)
+	mov 	r14, rsi ; hvor strengen skal plasseres
+	mov 	r15, rcx ; antall tegn vi skal padde ut til
+	zeros_to_desired_width:
+    mov     rdi, r14
+    mov 	rax, 0x3030303030303030
+	push 	rax
+	mov 	rsi, rsp
+	mov 	rcx, r15
+    cld
+	rep     movsb
+	pop 	rax
+
+	mov 	r12, 10	; r12 er tierpotens som skal ganges med ti til input-tallet er mindre
 	mov 	rcx, 1
 	nofDigits:
-	cmp 	r14, r13
+	cmp 	r13, r12
 	jl		nofDigitsFound
-	mov 	rax, r13		; --- r13 *= 10
+	mov 	rax, r12		; --- r12 *= 10
 	mov 	rdx, 10
 	mul 	rdx
-	mov 	r13, rax 	; ---
+	mov 	r12, rax 	;     ---
 	inc 	rcx
 	jmp 	nofDigits
 	nofDigitsFound:
-	mov 	r13,  r14         ; hvor mange bytes blir det, som oftest blir det vel r14.
-	cmp 	rcx, r14
+	mov 	r12,  r15         ; r12 holder nå antall digits
+    cmp 	rcx, r15
 	jle		actualWidthFound
-	mov 	r13,  rcx		 ; rcx > r14, r13 = max(rcx, r14)
+	mov 	r12,  rcx		 ; rcx > r15, r12 = max(rcx, r15)
 	actualWidthFound:
-	add 	r15,  r13		; lets start with the zero to terminate the number string
-	mov 	rdi, r15
-	mov 	rdx, 0
-	push 	rdx
+	add 	r14,  r12		; lets start with the zero to terminate the number string
+    mov 	rdi, r14
+    mov     rax, 0
+	push 	rax
 	mov 	rsi, rsp
 	movsb
-	pop 	rdx
-	dec 	r15		 		; points at position of least significant digit
+	pop 	rax
+	dec 	r14      		; points at position of least significant digit
 	new_round:
-	mov 	rax, r14
+	mov 	rax, r13
 	mov 	rbx, 10 ; divisor
 	mov 	rdx, 0  ; no fractions
 	div 	rbx     ; rax / rbx -> rax
-	mov 	r14, rax ; r14 = r14 / 10, rdx = rest ved divisjon (= siste siffer) 
+	mov 	r13, rax ; r13 = r13 / 10, rdx = rest ved divisjon (= siste siffer) 
 	write_remainder_to_memory:
-	or  	rdx, 0x30 	; rdx, now ready for print
-	mov 	rdi, r15		; to
+	add  	rdx, 0x30 	    ; rdx, now ready for print
+	mov 	rdi, r14		; to
 	push 	rdx
 	mov 	rsi, rsp		; from
 	movsb 					; move byte
+    dec     r14
 	pop 	rdx
 	back_to_new_round:
-	cmp		r14, 0
-	jz	 	int_to_str_exit
+	cmp		r13, 0
+	jz	 	int_to_str_exit ; if we have written all digits
 	dec 	r15
 	jmp 	new_round
-	int_to_str_push:
-	push 	 r13
-	push 	r13
-	push 	r14
-	push 	r15
-	push 	r14
-	push 	r15
-	jmp 	int_to_str_pushed
 	int_to_str_exit:
-	pop 	r15
-	pop 	r14
-	pop 	r15
-	pop 	r14
-	pop    	r13
-	pop 	 r13
 	ret
 
 mod:    ; rdi in , rax out

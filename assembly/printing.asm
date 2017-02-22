@@ -125,7 +125,7 @@ print_num_rec:
 	mov 	rdi, rdx
 	add  	rdi, '0' 	; rdx, now ready for print
 	call 	print_char
-	pop    rdi
+	pop     rdi
 	ret
 
 print_num_ln:

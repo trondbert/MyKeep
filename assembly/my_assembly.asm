@@ -1,16 +1,17 @@
 EXTERN int_to_str
 EXTERN print_bytes
 EXTERN print_char
+EXTERN print_raw
 EXTERN print_ln
 EXTERN print_num
+EXTERN print_num_ln
 EXTERN print_strlen
 EXTERN print_str_zeroterm
 EXTERN _printf
 
 ;;;;;;  RDI, RSI, RDX, RAX, RBC, RCX kan endres av kallet funksjon, kaller må evt. ta vare på dem. ;;;;;;
 
-section .data
- 
+section .data 
 msg:        dw      0x2134, 10 ; -> 0x34 0x20 -> ascii "4!"
 .len:       equ     $ - msg
 
@@ -35,22 +36,35 @@ global start
 EXTERN _printf
 
 start:
+    mov     rax, 0
+    push    rax
+    mov     rdi, 123
+    mov     rsi, rsp
+    mov     rcx, 4
+    call    int_to_str
+    mov     rdi, rsp
+    call    print_str_zeroterm
+    pop     rax
+
     mov     rax, 0x2000074 ; 116 gettimeofday
     push    rbx
-    mov     rdi, rsp
     mov     rsi, rsp
+    push    rbx
+    mov     rdi, rsp
     syscall 
-    pop     rdi
-    mov     rdi, rax
-    call    format_time
-    jmp     end_start
-    mov     rsi, rax
-    lodsq
-    mov     rdi, rax
-    ;*********
+    pop     r10
+    mov     r10, 3
+    mov     rdi, r10
+    pop     r10
+    ;call    format_time
+    ;jmp     end_start
+    ;mov     rsi, rax
+    ;lodsq
     ;mov     rdi, rax
-    call    print_num
-    call    print_ln
+    ;;*********
+    ;;mov     rdi, rax
+    ;call    print_num
+    ;call    print_ln
 
     end_start:
     mov     rax, 0x2000001 ; exit
@@ -59,7 +73,13 @@ start:
 
 format_time: ; rdi holds epoch seconds
     push    r12
-    appendYear:
+    call    format_time_append_year
+    ;call    format_time_append_months
+    ;call    format_time_append_days
+    pop     r12
+    ret
+
+format_time_append_year:
     mov     rax, rdi
     mov     r12, 31536000 ; secs per year
     mov     rdx, 0        ; no fractions
@@ -68,9 +88,11 @@ format_time: ; rdi holds epoch seconds
     add     rax, 1970       ; year
     mov     rdi, rax
     lea     rsi, [rel time_pretty]
-    mov     rdx, 4
+    mov     rcx, 4
     call    int_to_str
-    appendMonths:
+    ret
+
+format_time_append_months:
     pop     rdx
     mov     rax, rdx
     mov     r12, 2592000    ; secs per month
@@ -80,9 +102,11 @@ format_time: ; rdi holds epoch seconds
     add     rax, 1
     mov     rdi, rax
     lea     rsi, [rel time_pretty+4] ; 4 første bytes er årstall
-    mov     rdx, 2
+    mov     rcx, 2
     call    int_to_str
-    appendDays:
+    ret
+
+format_time_append_days:
     pop     rax
     mov     r12, 86400      ; secs per day
     mov     rdx, 0
@@ -90,16 +114,12 @@ format_time: ; rdi holds epoch seconds
     add     rax, 1
     mov     rdi, rax
     lea     rsi, [rel time_pretty+6] ; 6 første bytes er år og måned
-    mov     rdx, 2
+    mov     rcx, 2
     call    int_to_str  
 
     lea     rdi, [rel time_pretty]
     call    print_str_zeroterm
     call    print_ln
-    jmp     fmt_end
-
-    fmt_end:
-    pop     r12
     ret
 
 old:
