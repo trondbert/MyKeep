@@ -18,6 +18,7 @@ int_to_str: ; rdi holder tallet, rsi peker til område det skal skrives til (min
 	mov 	r13, rdi ; tallet som vi skal lage en string for (base 10)
 	mov 	r14, rsi ; hvor strengen skal plasseres
 	mov 	r15, rcx ; antall tegn vi skal padde ut til
+    mov     rdi, r13
 	zeros_to_desired_width:
     mov     rdi, r14
     mov 	rax, 0x3030303030303030
@@ -59,6 +60,7 @@ int_to_str: ; rdi holder tallet, rsi peker til område det skal skrives til (min
 	mov 	rdx, 0  ; no fractions
 	div 	rbx     ; rax / rbx -> rax
 	mov 	r13, rax ; r13 = r13 / 10, rdx = rest ved divisjon (= siste siffer) 
+    mov     rdi, rdx
 	write_remainder_to_memory:
 	add  	rdx, 0x30 	    ; rdx, now ready for print
 	mov 	rdi, r14		; to

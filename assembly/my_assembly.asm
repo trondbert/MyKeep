@@ -1,5 +1,7 @@
+EXTERN sleep
 EXTERN int_to_str
 EXTERN print_bytes
+EXTERN print_bytes_ln
 EXTERN print_char
 EXTERN print_raw
 EXTERN print_ln
@@ -29,42 +31,40 @@ fmt  db '123456789', 10, 0    ; something stupid here
 
 qbuf:           resq    0
 time_pretty:    resq    0
- 
+
+animal2:  dw  'monkey', 0
+animal:   dw  'elephant', 0
+
 section .text
+
+DEFAULT rel         ; [pointer+2] will always mean [rel pointer+2], not abs 
 
 global start
 EXTERN _printf
 
 start:
-    mov     rax, 0
-    push    rax
-    mov     rdi, 123
-    mov     rsi, rsp
-    mov     rcx, 4
-    call    int_to_str
+    mov     rdi, [animal]
+    push    rdi
     mov     rdi, rsp
-    call    print_str_zeroterm
+    mov     rsi, 8
+    call    print_bytes_ln
     pop     rax
+
+    mov     rdi, 2
+    call    sleep
 
     mov     rax, 0x2000074 ; 116 gettimeofday
     push    rbx
     mov     rsi, rsp
     push    rbx
+    push    rbx
     mov     rdi, rsp
-    syscall 
-    pop     r10
-    mov     r10, 3
-    mov     rdi, r10
-    pop     r10
-    ;call    format_time
-    ;jmp     end_start
-    ;mov     rsi, rax
-    ;lodsq
-    ;mov     rdi, rax
-    ;;*********
-    ;;mov     rdi, rax
-    ;call    print_num
-    ;call    print_ln
+    syscall
+    pop     rdi
+    pop     rax
+    pop     rax
+
+    call    format_time
 
     end_start:
     mov     rax, 0x2000001 ; exit
@@ -74,12 +74,18 @@ start:
 format_time: ; rdi holds epoch seconds
     push    r12
     call    format_time_append_year
-    ;call    format_time_append_months
-    ;call    format_time_append_days
+    mov     rdi, rax
+    call    format_time_append_months
+    mov     rdi, rax
+    call    format_time_append_days
+
+    lea     rdi, [rel time_pretty]
+    call    print_str_zeroterm
+    call    print_ln
     pop     r12
     ret
 
-format_time_append_year:
+format_time_append_year: ; writes year to destination and returns seconds in this year in rax
     mov     rax, rdi
     mov     r12, 31536000 ; secs per year
     mov     rdx, 0        ; no fractions
@@ -90,68 +96,36 @@ format_time_append_year:
     lea     rsi, [rel time_pretty]
     mov     rcx, 4
     call    int_to_str
+    
+    pop     rax
     ret
 
-format_time_append_months:
-    pop     rdx
-    mov     rax, rdx
+format_time_append_months:  ; writes year to destination and returns seconds in this month in rax
+    mov     rax, rdi
     mov     r12, 2592000    ; secs per month
     mov     rdx, 0
     div     r12
     push    rdx             ; secs in this month
     add     rax, 1
     mov     rdi, rax
-    lea     rsi, [rel time_pretty+4] ; 4 første bytes er årstall
+    lea     rsi, [rel time_pretty] 
+    add     rsi, 4                  ; 4 første bytes er årstall
     mov     rcx, 2
     call    int_to_str
+    pop     rax
     ret
 
 format_time_append_days:
-    pop     rax
+    mov     rax, rdi
     mov     r12, 86400      ; secs per day
     mov     rdx, 0
     div     r12
+    push    rdx
     add     rax, 1
     mov     rdi, rax
-    lea     rsi, [rel time_pretty+6] ; 6 første bytes er år og måned
+    lea     rsi, [rel time_pretty] 
+    add     rsi, 6                  ; 6 første bytes er år og måned
     mov     rcx, 2
-    call    int_to_str  
-
-    lea     rdi, [rel time_pretty]
-    call    print_str_zeroterm
-    call    print_ln
-    ret
-
-old:
-    add     rsp, 16 ; Skip argc and argv[0]
-    pop     rsi
-    sub     rbp, 8
-    mov     rdi, rsi
-    mov     rax, 0
-    call    _printf  ; Printer argument
-    add     rbp, 8
-    mov     rdi, 10
-    call    print_char
-
-    ;;;;; printing meaning of life with printf
-    sub     rbp, 16 ; 8 bytes x 2 (argument)
-    mov     rax, 0
-    lea     rdi, [rel fmt] ; RIP-relative
-    mov     rsi, meaning
-    call    _printf 
-    sub     rbp, 16
-    
-	mov     rdi, msg
-    mov     rsi, msg.len
-    call 	print_bytes
-
-	mov     rdi, buffer ; Hello world
-    mov     rsi, buffer.len
-    call 	print_bytes
-
-    mov     rdi, 10
-    call    print_char
-    mov     rax, 0x2000001 ; exit
-    mov     rdi, 0
-    syscall
+    call    int_to_str
+    pop     rax
     ret

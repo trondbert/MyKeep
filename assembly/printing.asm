@@ -42,7 +42,7 @@ print_bytes: ; rdi holder bytes som skal skrives, rsi holder antall bytes
 print_char: ; rdi holder characteren som skal skrives
     push    r11
     push    rdi
-	mov 	rsi, rsp ; Setter rsi til stack-pointer-adresse. Peker altså til opprinnelig rsi-verdi som sist ble pusha på stack
+	mov 	rsi, rsp
 	mov     rax, 0x2000004 ; write
     mov     rdi, 1 ; stdout
     mov     rdx, 1 ; antall bytes

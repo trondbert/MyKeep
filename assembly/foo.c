@@ -18,7 +18,9 @@ int main() {
     printf("b%ld\n", sizeof(struct sockaddr_in));
     printf("fds%ld\n", sizeof(socklen_t));
     printf("AF_UNSPEC: %d\n", AF_UNSPEC);
-    printf("timeval size: %ld\n", sizeof(time_t));
+    printf("timeval size: %ld\n", sizeof(struct timeval));
+    printf("time_t size: %ld\n", sizeof(time_t));
+    printf("suseconds_t size: %ld\n", sizeof(suseconds_t));
     printf("timezone size: %ld\n", sizeof(struct timezone));
     printf("int size: %ld\n", sizeof(int));
 }
